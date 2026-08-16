@@ -30,6 +30,8 @@ npm test
    Start at  09:00:40
    Duration  754ms (transform 67ms, setup 0ms, collect 635ms, tests 82ms, environment 0ms, prepare 277ms)
 ```
+<img width="980" height="394" alt="image" src="https://github.com/user-attachments/assets/a2dd24d2-e447-49c2-87d6-405b4b0ac11b" />
+
 ## Vitest
 ```
 > toktickit-client@1.0.0 test
@@ -49,3 +51,4 @@ npm test
    Start at  08:58:52
    Duration  1.98s (transform 69ms, setup 196ms, collect 279ms, tests 142ms, environment 973ms, prepare 132ms)
 ```
+<img width="1026" height="474" alt="image" src="https://github.com/user-attachments/assets/4b8ca697-9627-40b7-b907-b2dba7ad5df3" />
