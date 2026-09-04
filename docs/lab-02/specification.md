@@ -7,10 +7,10 @@
 **Base Branch**: `lab2-staging`  
 **Active Working Branch**: `feature/5-spec-and-tests`  
 **Reference Traceability**:
-* [TokTickIT-System-Level-SDS-v1.0.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/reference/TokTickIT-System-Level-SDS-v1.0.md) (SDS-SYS-001)
-* [Lab_02_labsheet.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/reference/Lab_02_labsheet.md)
-* [docs/lab-02/source-evidence.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/source-evidence.md)
-* [docs/lab-02/poc-scope-and-issues.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/poc-scope-and-issues.md)
+* [TokTickIT-System-Level-SDS-v1.0.md](../reference/TokTickIT-System-Level-SDS-v1.0.md) (SDS-SYS-001)
+* [Lab_02_labsheet.md](../reference/Lab_02_labsheet.md)
+* [source-evidence.md](./source-evidence.md)
+* [poc-scope-and-issues.md](./poc-scope-and-issues.md)
 
 ---
 
@@ -91,7 +91,7 @@ Because formal authentication and password management are scheduled for Lab 3, L
 
 ## 6. UI Specification Summary
 
-The full presentation contract is codified in [docs/lab-02/ui-spec.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/ui-spec.md), incorporating all 20 interview decisions (**DR-01** through **DR-20**):
+The full presentation contract is codified in [ui-spec.md](./ui-spec.md), incorporating all 20 interview decisions (**DR-01** through **DR-20**):
 
 * **Color Palette (Zen Green)**:
   * Primary Green: `#006B3C` (Header, primary buttons, strong accents).
@@ -203,7 +203,7 @@ erDiagram
 
 ## 8. API Contract Summary
 
-The complete REST API specification is detailed in [docs/lab-02/api-spec.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/api-spec.md):
+The complete REST API specification is detailed in [api-spec.md](./api-spec.md):
 
 | Method | Path | Summary | Auth / Ownership Check |
 | :--- | :--- | :--- | :--- |

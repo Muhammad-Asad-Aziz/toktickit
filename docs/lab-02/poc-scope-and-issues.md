@@ -4,7 +4,7 @@
 **Target Sprint**: TokTickIT Lab 2 (Sprint 2) — Requester Ticketing MVP with UI Foundation  
 **Base Branch**: `lab2-staging`  
 **Current Active Branch**: `feature/5-spec-and-tests`  
-**Traceability Reference**: [docs/lab-02/source-evidence.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/source-evidence.md)  
+**Traceability Reference**: [source-evidence.md](./source-evidence.md)  
 
 ---
 

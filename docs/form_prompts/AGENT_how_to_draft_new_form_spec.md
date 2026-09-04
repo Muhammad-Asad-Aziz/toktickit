@@ -71,7 +71,7 @@ Required sections:
 - **3. Business logic and edge cases:** numbering, exact server-recomputed formulas, validation rules, per-variant differences, concurrency/ACID, and explicit edge cases.
 - **4. List view:** default columns, paging, and filters.
 - **5. Security and menu:** app-native RBAC registration, menu path, route, and visibility rule.
-- **5b. Shared components & line-item conformance:** declare that Notes/Attachments + Change Log are **reused** (not rebuilt) per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](file:///{WORKSPACE_ROOT}/docs/spec-core.md#13-shared-notesattachments--change-log-specification), and that any line-item grid **conforms** to [docs/spec-core.md#12-line-item-grid-specification-the-detail-grid](file:///{WORKSPACE_ROOT}/docs/spec-core.md#12-line-item-grid-specification-the-detail-grid). The spec lists line columns only; it does not redefine line-item styling.
+- **5b. Shared components & line-item conformance:** declare that Notes/Attachments + Change Log are **reused** (not rebuilt) per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](../spec-core.md#13-shared-notesattachments--change-log-specification), and that any line-item grid **conforms** to [docs/spec-core.md#12-line-item-grid-specification-the-detail-grid](../spec-core.md#12-line-item-grid-specification-the-detail-grid). The spec lists line columns only; it does not redefine line-item styling.
 - **6. Test plan:** universal CRUD/style IDs, the shared-component reuse IDs (`CRUD-059…063`) and line-item conformance IDs (`LINE-001…009`) where applicable, plus form-specific business-rule tests.
 - **7. Open questions:** tagged and resolved before freeze.
 
@@ -129,8 +129,8 @@ Freeze rule: the spec is frozen and ready for Codex only when both queues are em
 - [ ] Totals/derived values have exact formulas.
 - [ ] Numbering cites the proc/function.
 - [ ] RBAC registration is specified, including admin-only default and per-variant resources where needed.
-- [ ] Shared components declared as **reused, not rebuilt** (Notes/Attachments + Change Log) per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](file:///{WORKSPACE_ROOT}/docs/spec-core.md#13-shared-notesattachments--change-log-specification).
-- [ ] Any line-item grid is declared to **conform** to [docs/spec-core.md#12-line-item-grid-specification-the-detail-grid](file:///{WORKSPACE_ROOT}/docs/spec-core.md#12-line-item-grid-specification-the-detail-grid) (the nine rules); the spec does not redefine line-item styling.
+- [ ] Shared components declared as **reused, not rebuilt** (Notes/Attachments + Change Log) per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](../spec-core.md#13-shared-notesattachments--change-log-specification).
+- [ ] Any line-item grid is declared to **conform** to [docs/spec-core.md#12-line-item-grid-specification-the-detail-grid](../spec-core.md#12-line-item-grid-specification-the-detail-grid) (the nine rules); the spec does not redefine line-item styling.
 - [ ] Test plan cites CRUD ids (incl. `CRUD-059…063` and `LINE-001…009` where applicable) and includes business-logic `BR` tests with expected results and `MANUAL` tags.
 - [ ] Open questions show zero `[CONTEXT]` open and all `[DECISION]` items answered.
 

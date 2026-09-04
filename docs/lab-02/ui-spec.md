@@ -2,7 +2,7 @@
 
 **Document Status**: Official UI Specification Baseline  
 **Theme**: KMUTT IT Service Desk "Zen Green" Design System  
-**Traceability Reference**: [Lab_02_labsheet.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/reference/Lab_02_labsheet.md) (§7, §8), [docs/lab-02/specification.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/specification.md)  
+**Traceability Reference**: [Lab_02_labsheet.md](../reference/Lab_02_labsheet.md) (§7, §8), [specification.md](./specification.md)  
 **Approved Decisions**: DR-01 through DR-20  
 
 ---

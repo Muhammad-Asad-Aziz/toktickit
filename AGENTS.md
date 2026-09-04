@@ -13,9 +13,6 @@ Below is the complete index of files in this repository, showing how each fits i
 | Relative Path | SDD Component / Stage | What the File Does |
 | :--- | :--- | :--- |
 | **`AGENTS.md`** | **Process Entrypoint & Lifecycle** | Defines the E2E lifecycle, work norms, and agent orchestration. |
-| Relative Path | SDD Component / Stage | What the File Does |
-| :--- | :--- | :--- |
-| **`AGENTS.md`** | **Process Entrypoint & Lifecycle** | Defines the E2E lifecycle, work norms, and agent orchestration. |
 | **`docs/reference/TokTickIT-System-Level-SDS-v1.0.md`** | **System-Level SDS** (Step 4) | Approved v1.0 architecture, three-tier tech stack (Node/Express/Prisma/React), and system invariants. |
 | **`docs/reference/Lab_02_labsheet.md`** | **Sprint Requirements & Rubric** | Sprint 2 functional scope, business rules, Zen Green theme, and delivery criteria. |
 | **`docs/reference/TokTickIT_GitHub_Workflow_Guide_TH_EN.pdf`** | **Git Workflow Guide** | GitHub Projects, 6-column Kanban board, PR linking, and peer review rules. |
@@ -101,8 +98,8 @@ graph TD
 
 While the workspace runs on a single-instruction template for easy observation, the pipeline is designed to easily plug in sub-agents:
 
-* **Spec Auditor (Sub-Agent)**: Validates that the builder's code strictly honors [spec-core.md](file:///{WORKSPACE_ROOT}/docs/spec-core.md) and the local Feature SDS.
-* **Style Auditor (Sub-Agent)**: Loads only [style-contract.md](file:///{WORKSPACE_ROOT}/docs/style-contract.md) and modified UI files to check styling variable compliance.
+* **Spec Auditor (Sub-Agent)**: Validates that the builder's code strictly honors [specification.md](docs/lab-02/specification.md) and the local Feature SDS.
+* **Style Auditor (Sub-Agent)**: Loads only [ui-spec.md](docs/lab-02/ui-spec.md) and modified UI files to check styling variable compliance.
 * **Test Authoring Sub-Agent**: Inspects the Feature SDS & STS to automatically generate or update test files under `/tests/`.
 
 ---

@@ -20,7 +20,7 @@ npm test
 > vitest run
 
 
- RUN  v2.1.9 C:/Users/Muhammad Asad Aziz/Downloads/CPE 334/toktickit/server
+ RUN  v2.1.9 ./server
 
  ✓ tests/lab-01/categories.test.ts (1)
  ✓ tests/lab-01/health.test.ts (1)
@@ -38,7 +38,7 @@ npm test
 > vitest run
 
 
- RUN  v2.1.9 C:/Users/Muhammad Asad Aziz/Downloads/CPE 334/toktickit/client
+ RUN  v2.1.9 ./client
 
  ✓ tests/lab-01/App.test.tsx (3)
    ✓ App (3)

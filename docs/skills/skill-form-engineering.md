@@ -7,7 +7,7 @@ This playbook provides a unified workflow for building, refactoring, and verifyi
 - Performing compliance reviews, QA checks, or regression testing on a form
 
 ## Inputs
-- [spec-core.md](file:///{WORKSPACE_ROOT}/docs/spec-core.md) (single source of truth for design patterns and product rules)
+- [spec-core.md](../spec-core.md) (single source of truth for design patterns and product rules)
 
 ## Step-by-Step Workflow
 
@@ -139,7 +139,7 @@ Before writing code, gather and define:
   - **Tabular textboxes** (curved shaded label/input, developer-specified character widths, separated by 3px gap).
 - [ ] **Enums & Dropdowns**: Identify enum fields in headers and grid columns to render using `.form-select`.
 - [ ] **Standard Toolbar Buttons**: Define which standard buttons (Close, Save, New, List, Edit, Copy, Delete, Print, Cancel Changes, dirty-state indicator) should be active, ensuring mode-specific enablement, proper icons, and tooltips are wired.
-- [ ] **Catalog & Permission Registration**: Plan the dot-notation permission names and register them in [AppPermissions.cs](file:///{WORKSPACE_ROOT}/Security/AppPermissions.cs) and [AppPermissionCatalog.cs](file:///{WORKSPACE_ROOT}/Security/AppPermissionCatalog.cs) under the correct parent menu module, so it syncs to the database.
+- [ ] **Catalog & Permission Registration**: Plan the dot-notation permission names and register them in [AppPermissions.cs](../../Security/AppPermissions.cs) and [AppPermissionCatalog.cs](../../Security/AppPermissionCatalog.cs) under the correct parent menu module, so it syncs to the database.
 
 ### Phase 2: Implementation & Verification Checklist
 
@@ -174,7 +174,7 @@ Before writing code, gather and define:
 - [ ] Advancing past the last cell of the last row automatically appends a new blank row.
 
 #### 5. Navigation, Sidebar, and Dirty-Bit Guards
-- [ ] Sidebar support strip (Notes / Attachments and Change Logs) is present on the right-hand side and loaded via `sharedForm?.wire({...})` — **reused, not rebuilt**, per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](file:///{WORKSPACE_ROOT}/docs/spec-core.md#13-shared-notesattachments--change-log-specification) (entity + id, the seven shared handlers, `IChangeLogTrackedEntity`, toolbar flags).
+- [ ] Sidebar support strip (Notes / Attachments and Change Logs) is present on the right-hand side and loaded via `sharedForm?.wire({...})` — **reused, not rebuilt**, per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](../spec-core.md#13-shared-notesattachments--change-log-specification) (entity + id, the seven shared handlers, `IChangeLogTrackedEntity`, toolbar flags).
 - [ ] The toolbar form state indicator displays `✗` (dirty, orange `#b97700`) or `✓` (clean, green `#1e7f3a`) with Thai tooltips and is visible only in Create/Edit modes.
 - [ ] Navigation/cancel buttons (Cancel Changes, Close, New, List View, Edit) trigger the unsaved-change confirmation warning if the form has modifications.
 - [ ] Centralized modal dialogs (`window.appDialogs.info` and `window.appDialogs.confirm`) are reused for all OK Only alerts and Yes/No confirmations (e.g., delete confirmation).

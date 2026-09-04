@@ -88,4 +88,4 @@ Use this document before implementing or approving any form, list, lookup, repor
 
 ## 10. Conformance Auditing
 
-Before completing any UI work, the implementation must be audited against this contract. For step-by-step audit guidelines, review tools, and reporting checklists, refer to the QA playbook in [skill-form-engineering.md](file:///{WORKSPACE_ROOT}/docs/skills/skill-form-engineering.md).
+Before completing any UI work, the implementation must be audited against this contract. For step-by-step audit guidelines, review tools, and reporting checklists, refer to the QA playbook in [skill-form-engineering.md](skills/skill-form-engineering.md).

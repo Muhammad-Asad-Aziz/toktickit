@@ -3,7 +3,7 @@
 **Document Status**: Official Software Test Plan Baseline  
 **Target Milestone**: Lab 2 (Sprint 2) Requester Ticketing MVP  
 **Test Frameworks**: Vitest 2.1.8, Supertest 7.0.0, React Testing Library 16.1.0, Playwright  
-**Traceability Reference**: [docs/lab-02/specification.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/specification.md), [docs/lab-02/api-spec.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/lab-02/api-spec.md)  
+**Traceability Reference**: [specification.md](./specification.md), [api-spec.md](./api-spec.md)  
 
 ---
 

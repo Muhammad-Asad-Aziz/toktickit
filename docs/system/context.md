@@ -2,7 +2,7 @@
 
 **System Identity**: TokTickIT — IT Service Desk Ticketing System  
 **Course**: CPE 334 Introduction to Software Engineering in the Age of AI Agents  
-**Reference Document**: [TokTickIT-System-Level-SDS-v1.0.md](file:///c:/Users/Muhammad%20Asad%20Aziz/Downloads/CPE%20334/toktickit/docs/reference/TokTickIT-System-Level-SDS-v1.0.md) (Document ID: SDS-SYS-001)  
+**Reference Document**: [TokTickIT-System-Level-SDS-v1.0.md](../reference/TokTickIT-System-Level-SDS-v1.0.md) (Document ID: SDS-SYS-001)  
 
 ---
 

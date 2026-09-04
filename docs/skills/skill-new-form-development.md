@@ -375,7 +375,7 @@ Verification before moving on:
 
 ### 10. Central Support Subforms
 
-**REUSE, never rebuild.** Change Log and Notes / Attachments are central shared infrastructure (engine `wwwroot/js/shared-form.js`, buttons in `Pages/Shared/_FormToolbar.cshtml`, dialog CSS in `site.css`). Do **not** fork `shared-form.js`, recreate the notes/log dialog markup, or add page-local dialog CSS or a standalone Attachments button. Follow the requirements in [docs/spec-core.md#13-shared-notesattachments--change-log-specification](file:///{WORKSPACE_ROOT}/docs/spec-core.md#13-shared-notesattachments--change-log-specification) exactly. The feature breaks in a non-obvious way unless **all three layers** are in sync: (1) the entity implements `IChangeLogTrackedEntity` (else the change log is silently empty), (2) the seven handlers below have the **exact** names `shared-form.js` calls via `?handler=...` (else 404/405), and (3) `SetToolbar()` sets `CanViewNotes`/`CanViewChangeLogs = !IsCreateMode` (else the buttons stay disabled).
+**REUSE, never rebuild.** Change Log and Notes / Attachments are central shared infrastructure (engine `wwwroot/js/shared-form.js`, buttons in `Pages/Shared/_FormToolbar.cshtml`, dialog CSS in `site.css`). Do **not** fork `shared-form.js`, recreate the notes/log dialog markup, or add page-local dialog CSS or a standalone Attachments button. Follow the requirements in [docs/spec-core.md#13-shared-notesattachments--change-log-specification](../spec-core.md#13-shared-notesattachments--change-log-specification) exactly. The feature breaks in a non-obvious way unless **all three layers** are in sync: (1) the entity implements `IChangeLogTrackedEntity` (else the change log is silently empty), (2) the seven handlers below have the **exact** names `shared-form.js` calls via `?handler=...` (else 404/405), and (3) `SetToolbar()` sets `CanViewNotes`/`CanViewChangeLogs = !IsCreateMode` (else the buttons stay disabled).
 
 Wire the two central support forms for persisted records unless the spec explicitly says the entity does not support them:
 
@@ -515,7 +515,7 @@ A new form is not complete until:
 - Server-side recalculation and validation are implemented.
 - UI style auditor checks pass.
 - Targeted tests prove core create/edit/lookup/save behavior.
-- Shared Notes/Change Log are **reused** (not rebuilt) per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](file:///{WORKSPACE_ROOT}/docs/spec-core.md#13-shared-notesattachments--change-log-specification), and any line-item grid **conforms** to [docs/spec-core.md#12-line-item-grid-specification-the-detail-grid](file:///{WORKSPACE_ROOT}/docs/spec-core.md#12-line-item-grid-specification-the-detail-grid) (`CRUD-059…063` / `LINE-001…009` pass).
+- Shared Notes/Change Log are **reused** (not rebuilt) per [docs/spec-core.md#13-shared-notesattachments--change-log-specification](../spec-core.md#13-shared-notesattachments--change-log-specification), and any line-item grid **conforms** to [docs/spec-core.md#12-line-item-grid-specification-the-detail-grid](../spec-core.md#12-line-item-grid-specification-the-detail-grid) (`CRUD-059…063` / `LINE-001…009` pass).
 - Documentation handoff is current.
 
 
@@ -523,7 +523,7 @@ A new form is not complete until:
 - **Layout:** render the header per the spec's tab sections + field order + simple/tabular classes (see skill-form-engineering addendum).
 - **Variants:** implement parameter-driven variants (e.g., PO vs WO) per spec section 0.
 - **Permissions:** register RBAC resources per the skill-auth-permissions addendum (admin-only default, per-variant).
-- **After build:** hand off to a minimal-context **Test sub-agent** (`docs/testing-contract.md` + spec section 6) and a **Style-review sub-agent** (style-contract + changed UI files only). See the multi-agent delegation guidelines in [AGENTS.md](file:///{WORKSPACE_ROOT}/AGENTS.md).
+- **After build:** hand off to a minimal-context **Test sub-agent** (`docs/testing-contract.md` + spec section 6) and a **Style-review sub-agent** (style-contract + changed UI files only). See the multi-agent delegation guidelines in [AGENTS.md](../../AGENTS.md).
 - **Tests:** keep shared reusable tests under `/tests/shared/` and per-form tests under `/tests/forms/<FormName>/` with descriptive form-name filenames; each test cites its `BR`/`CRUD` id and updates that form's `coverage-report.md`. The universal `CRUD`/`LINE` checks live **once** in `/tests/shared/` and are aimed at this form via a small `runShared({...})` invocation file in its folder (Option A — see `docs/testing-contract.md` §1A). If no harness exists yet, the **first** form also bootstraps `/tests/shared/` + the C# test project + the Playwright config.
 - **PR report:** when done, open the PR and report it with a GitHub link + test summary (spec/Codex/total counts, manual count + developer-tested, automated pass count, notes).
 - **Closed-world:** if the spec is silent on something needed, STOP and ask; never invent. If the one-shot build fails, append a `BUILD-FEEDBACK` note.
