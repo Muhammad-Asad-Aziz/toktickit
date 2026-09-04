@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { checkSystem, Category } from "./api.js";
+import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
+import AppHeader from "./components/AppHeader.js";
+import RequesterModal from "./components/RequesterModal.js";
 
-// UI states you must handle for Issue 4: idle, loading, success, error.
 type UiState = "idle" | "loading" | "success" | "error";
 
-export default function App() {
+function AppContent() {
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
+  const { currentRequester, offlineWarning } = useRequester();
 
   async function handleCheck() {
     setState("loading");
@@ -20,33 +23,87 @@ export default function App() {
   }
 
   return (
-    <div className="container py-5" style={{ maxWidth: 640 }}>
-      <h1 className="h3 mb-4">
-        TokTickIT <span className="text-success">IT Service Desk</span>
-      </h1>
+    <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
+      <AppHeader />
 
-      <button className="btn btn-success" onClick={handleCheck} disabled={state === "loading"}>
-        {state === "loading" ? "Loading…" : "Check System"}
-      </button>
-
-      {state === "success" && (
-        <div className="mt-4">
-          <p>System Status: Online</p>
-          <p className="mt-3 mb-2">Supported Request Categories:</p>
-          <ol>
-            {categories.map((category) => (
-              <li key={category.id}>{category.name}</li>
-            ))}
-          </ol>
+      {offlineWarning && (
+        <div className="alert alert-warning mb-0 text-center rounded-0 py-2 border-0" role="alert">
+          <strong>Network warning:</strong> Unable to synchronize user identity with server. Working offline.
         </div>
       )}
 
-      {state === "error" && (
-        <div className="mt-4">
-          <p>System Status: Offline</p>
-          <p>Unable to connect to TokTickIT API</p>
+      <main className="container py-4 flex-grow-1" style={{ maxWidth: 860 }}>
+        {/* Active Requester Card */}
+        {currentRequester && (
+          <div className="card shadow-sm border-0 mb-4" style={{ borderRadius: 8 }}>
+            <div className="card-body p-4">
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <span className="badge bg-success-subtle text-success mb-2">
+                    Active Requester Context
+                  </span>
+                  <h2 className="h4 mb-1 text-dark fw-bold">{currentRequester.name}</h2>
+                  <p className="text-muted mb-0">
+                    <span>{currentRequester.email}</span>
+                    {currentRequester.department && (
+                      <span className="ms-2 badge bg-light text-secondary border">
+                        {currentRequester.department}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* System Status / Health Check (Preserved Lab 1 Baseline) */}
+        <div className="card shadow-sm border-0" style={{ borderRadius: 8 }}>
+          <div className="card-body p-4">
+            <h2 className="h4 mb-4">
+              System Verification <span className="text-success">& Status</span>
+            </h2>
+
+            <button
+              className="btn btn-success"
+              onClick={handleCheck}
+              disabled={state === "loading"}
+              style={{ backgroundColor: "#006B3C" }}
+            >
+              {state === "loading" ? "Loading…" : "Check System"}
+            </button>
+
+            {state === "success" && (
+              <div className="mt-4">
+                <p>System Status: Online</p>
+                <p className="mt-3 mb-2">Supported Request Categories:</p>
+                <ol>
+                  {categories.map((category) => (
+                    <li key={category.id}>{category.name}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {state === "error" && (
+              <div className="mt-4">
+                <p>System Status: Offline</p>
+                <p>Unable to connect to TokTickIT API</p>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </main>
+
+      <RequesterModal />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <RequesterProvider>
+      <AppContent />
+    </RequesterProvider>
   );
 }
