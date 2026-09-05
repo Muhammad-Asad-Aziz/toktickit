@@ -4,12 +4,15 @@ import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
 import AppHeader from "./components/AppHeader.js";
 import RequesterModal from "./components/RequesterModal.js";
 
+import CreateTicketForm from "./components/CreateTicketForm.js";
+
 type UiState = "idle" | "loading" | "success" | "error";
 
 function AppContent() {
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
   const { currentRequester, offlineWarning } = useRequester();
+
 
   async function handleCheck() {
     setState("loading");
@@ -33,29 +36,10 @@ function AppContent() {
       )}
 
       <main className="container py-4 flex-grow-1" style={{ maxWidth: 860 }}>
-        {/* Active Requester Card */}
-        {currentRequester && (
-          <div className="card shadow-sm border-0 mb-4" style={{ borderRadius: 8 }}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center justify-content-between">
-                <div>
-                  <span className="badge bg-success-subtle text-success mb-2">
-                    Active Requester Context
-                  </span>
-                  <h2 className="h4 mb-1 text-dark fw-bold">{currentRequester.name}</h2>
-                  <p className="text-muted mb-0">
-                    <span>{currentRequester.email}</span>
-                    {currentRequester.department && (
-                      <span className="ms-2 badge bg-light text-secondary border">
-                        {currentRequester.department}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Create Ticket Form (Feature 7 / Feature 3) */}
+        <div className="mb-4">
+          <CreateTicketForm />
+        </div>
 
         {/* System Status / Health Check (Preserved Lab 1 Baseline) */}
         <div className="card shadow-sm border-0" style={{ borderRadius: 8 }}>
@@ -95,10 +79,12 @@ function AppContent() {
         </div>
       </main>
 
+
       <RequesterModal />
     </div>
   );
 }
+
 
 export default function App() {
   return (
