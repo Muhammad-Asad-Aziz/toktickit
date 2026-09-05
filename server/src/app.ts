@@ -3,6 +3,7 @@ import cors from "cors";
 import { getPrisma } from "./prisma.js";
 import { getRequesters } from "./routes/requesters.js";
 import { getRelatedSystems } from "./routes/relatedSystems.js";
+import { createTicket, handleUploadMiddleware } from "./routes/tickets.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -58,4 +59,11 @@ app.get("/api/v1/requesters", getRequesters);
 app.get("/api/related-systems", getRelatedSystems);
 app.get("/api/v1/related-systems", getRelatedSystems);
 
+// ---------------------------------------------------------------------------
+// Create Ticket (Feature 3 / Feature 7)
+// ---------------------------------------------------------------------------
+app.post("/api/tickets", handleUploadMiddleware, createTicket);
+app.post("/api/v1/tickets", handleUploadMiddleware, createTicket);
+
 export default app;
+
