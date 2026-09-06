@@ -1,6 +1,18 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { getPrisma } from "./prisma.js";
+import { getRequesters } from "./routes/requesters.js";
+import { getRelatedSystems } from "./routes/relatedSystems.js";
+import {
+  createTicket,
+  getTickets,
+  getTicketById,
+  uploadAttachment,
+  downloadAttachment,
+  removeAttachment,
+  handleUploadMiddleware,
+  handleSingleUploadMiddleware,
+} from "./routes/tickets.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -10,16 +22,14 @@ app.use(cors());          // already wired: lets the Vite dev server call this A
 app.use(express.json());
 
 // ---------------------------------------------------------------------------
-// Issue 2 — API health check
-// Make the test in tests/lab-01/health.test.ts pass.
-// It must return HTTP 200 with JSON: { status: "ok", service: "TokTickIT API" }
+// Health check
 // ---------------------------------------------------------------------------
 app.get("/api/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok", service: "TokTickIT API" });
 });
 
 // ---------------------------------------------------------------------------
-// Issue 4 — Category list
+// Category list (Lab 1 backwards compatible + Lab 2 v1 endpoint)
 // ---------------------------------------------------------------------------
 app.get("/api/categories", async (_req: Request, res: Response) => {
   try {
@@ -33,4 +43,58 @@ app.get("/api/categories", async (_req: Request, res: Response) => {
   }
 });
 
+app.get("/api/v1/categories", async (_req: Request, res: Response) => {
+  try {
+    const categories = await getPrisma().category.findMany({
+      where: { isActive: true },
+      select: { id: true, code: true, name: true, description: true, isActive: true },
+      orderBy: { id: "asc" },
+    });
+    res.status(200).json(categories);
+  } catch {
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Development Requesters (Feature 2)
+// ---------------------------------------------------------------------------
+app.get("/api/requesters", getRequesters);
+app.get("/api/v1/requesters", getRequesters);
+
+// ---------------------------------------------------------------------------
+// Related Systems (Feature 2)
+// ---------------------------------------------------------------------------
+app.get("/api/related-systems", getRelatedSystems);
+app.get("/api/v1/related-systems", getRelatedSystems);
+
+// ---------------------------------------------------------------------------
+// Create Ticket (Feature 3 / Feature 7)
+// ---------------------------------------------------------------------------
+app.post("/api/tickets", handleUploadMiddleware, createTicket);
+app.post("/api/v1/tickets", handleUploadMiddleware, createTicket);
+
+// ---------------------------------------------------------------------------
+// My Tickets / Query Tickets (Feature 8 / Feature 4)
+// ---------------------------------------------------------------------------
+app.get("/api/tickets", getTickets);
+app.get("/api/v1/tickets", getTickets);
+
+// ---------------------------------------------------------------------------
+// Ticket Detail & Attachments (Feature 9 / Feature 5)
+// ---------------------------------------------------------------------------
+app.get("/api/tickets/:id", getTicketById);
+app.get("/api/v1/tickets/:id", getTicketById);
+
+app.post("/api/tickets/:id/attachments", handleSingleUploadMiddleware, uploadAttachment);
+app.post("/api/v1/tickets/:id/attachments", handleSingleUploadMiddleware, uploadAttachment);
+
+app.get("/api/attachments/:id/download", downloadAttachment);
+app.get("/api/v1/attachments/:id/download", downloadAttachment);
+
+app.delete("/api/attachments/:id", removeAttachment);
+app.delete("/api/v1/attachments/:id", removeAttachment);
+
 export default app;
+
+

@@ -12,3 +12,11 @@ server/prisma/*.db
 # logs & OS
 *.log
 .DS_Store
+# file uploads
+server/uploads/*
+!server/uploads/.gitkeep
+
+# playwright test artifacts & visual evidence screenshots
+test-results/
+playwright-report/
+artifacts/
