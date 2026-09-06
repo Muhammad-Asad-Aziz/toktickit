@@ -10,6 +10,7 @@ import { useRequester } from "../context/RequesterContext.js";
 
 interface MyTicketsProps {
   onCreateTicket?: () => void;
+  onViewTicket?: (ticketId: number) => void;
 }
 
 type SortColumn =
@@ -20,7 +21,7 @@ type SortColumn =
   | "itPriority"
   | "currentStatus";
 
-export default function MyTickets({ onCreateTicket }: MyTicketsProps) {
+export default function MyTickets({ onCreateTicket, onViewTicket }: MyTicketsProps) {
   const { currentRequester } = useRequester();
 
   // Reference data
@@ -609,7 +610,19 @@ export default function MyTickets({ onCreateTicket }: MyTicketsProps) {
                 {tickets.map((t) => (
                   <tr key={t.id}>
                     <td className="ps-4">
-                      <span className="ticket-number-cell">{t.ticketNumber || t.ticketNo}</span>
+                      {onViewTicket ? (
+                        <button
+                          type="button"
+                          className="btn btn-link p-0 ticket-number-cell text-decoration-none border-0"
+                          onClick={() => onViewTicket(t.id)}
+                          data-testid={`ticket-link-${t.id}`}
+                          style={{ cursor: "pointer", color: "var(--zen-primary-green)" }}
+                        >
+                          {t.ticketNumber || t.ticketNo}
+                        </button>
+                      ) : (
+                        <span className="ticket-number-cell">{t.ticketNumber || t.ticketNo}</span>
+                      )}
                     </td>
                     <td>{formatDate(t.createdAt)}</td>
                     <td>
@@ -664,7 +677,19 @@ export default function MyTickets({ onCreateTicket }: MyTicketsProps) {
               <div key={t.id} className="my-tickets-mobile-card" data-testid={`ticket-card-${t.id}`}>
                 {/* Header: Ticket Number & Status */}
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span className="ticket-number-cell fs-6">{t.ticketNumber || t.ticketNo}</span>
+                  {onViewTicket ? (
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 ticket-number-cell fs-6 text-decoration-none border-0"
+                      onClick={() => onViewTicket(t.id)}
+                      data-testid={`mobile-ticket-link-${t.id}`}
+                      style={{ cursor: "pointer", color: "var(--zen-primary-green)" }}
+                    >
+                      {t.ticketNumber || t.ticketNo}
+                    </button>
+                  ) : (
+                    <span className="ticket-number-cell fs-6">{t.ticketNumber || t.ticketNo}</span>
+                  )}
                   <span className={`badge-status ${getStatusBadgeClass(t.currentStatus || t.status || "New")}`}>
                     {t.currentStatus || t.status}
                   </span>

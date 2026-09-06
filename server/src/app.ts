@@ -3,7 +3,16 @@ import cors from "cors";
 import { getPrisma } from "./prisma.js";
 import { getRequesters } from "./routes/requesters.js";
 import { getRelatedSystems } from "./routes/relatedSystems.js";
-import { createTicket, getTickets, handleUploadMiddleware } from "./routes/tickets.js";
+import {
+  createTicket,
+  getTickets,
+  getTicketById,
+  uploadAttachment,
+  downloadAttachment,
+  removeAttachment,
+  handleUploadMiddleware,
+  handleSingleUploadMiddleware,
+} from "./routes/tickets.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -71,5 +80,21 @@ app.post("/api/v1/tickets", handleUploadMiddleware, createTicket);
 app.get("/api/tickets", getTickets);
 app.get("/api/v1/tickets", getTickets);
 
+// ---------------------------------------------------------------------------
+// Ticket Detail & Attachments (Feature 9 / Feature 5)
+// ---------------------------------------------------------------------------
+app.get("/api/tickets/:id", getTicketById);
+app.get("/api/v1/tickets/:id", getTicketById);
+
+app.post("/api/tickets/:id/attachments", handleSingleUploadMiddleware, uploadAttachment);
+app.post("/api/v1/tickets/:id/attachments", handleSingleUploadMiddleware, uploadAttachment);
+
+app.get("/api/attachments/:id/download", downloadAttachment);
+app.get("/api/v1/attachments/:id/download", downloadAttachment);
+
+app.delete("/api/attachments/:id", removeAttachment);
+app.delete("/api/v1/attachments/:id", removeAttachment);
+
 export default app;
+
 
