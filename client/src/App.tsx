@@ -1,19 +1,23 @@
 import { useState } from "react";
-import { checkSystem, Category } from "./api.js";
+import * as api from "./api.js";
+import { Category } from "./api.js";
 import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
 import AppHeader from "./components/AppHeader.js";
 import RequesterModal from "./components/RequesterModal.js";
 import CreateTicketForm from "./components/CreateTicketForm.js";
 import MyTickets from "./components/MyTickets.js";
+import RequesterTicketDetail from "./components/RequesterTicketDetail.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 
 interface AppContentProps {
-  initialView?: "create" | "my-tickets";
+  initialView?: "create" | "my-tickets" | "detail";
+  initialTicketId?: number | null;
 }
 
-function AppContent({ initialView = "create" }: AppContentProps) {
-  const [activeView, setActiveView] = useState<"create" | "my-tickets">(initialView);
+function AppContent({ initialView = "create", initialTicketId = null }: AppContentProps) {
+  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail">(initialView);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(initialTicketId);
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
   const { currentRequester, offlineWarning } = useRequester();
@@ -21,7 +25,7 @@ function AppContent({ initialView = "create" }: AppContentProps) {
   async function handleCheck() {
     setState("loading");
     try {
-      const result = await checkSystem();
+      const result = await api.checkSystem();
       setCategories(result.categories);
       setState("success");
     } catch {
@@ -29,9 +33,17 @@ function AppContent({ initialView = "create" }: AppContentProps) {
     }
   }
 
+  const handleHeaderViewChange = (view: "create" | "my-tickets") => {
+    setActiveView(view);
+    setSelectedTicketId(null);
+  };
+
   return (
     <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
-      <AppHeader activeView={activeView} onViewChange={setActiveView} />
+      <AppHeader
+        activeView={activeView === "detail" ? "my-tickets" : activeView}
+        onViewChange={handleHeaderViewChange}
+      />
 
       {offlineWarning && (
         <div className="alert alert-warning mb-0 text-center rounded-0 py-2 border-0" role="alert">
@@ -41,17 +53,34 @@ function AppContent({ initialView = "create" }: AppContentProps) {
 
       <main
         className="container py-4 flex-grow-1"
-        style={{ maxWidth: activeView === "my-tickets" ? 1320 : 860 }}
+        style={{ maxWidth: activeView === "create" ? 860 : 1320 }}
       >
         {activeView === "create" ? (
           /* Create Ticket Form View (Feature 7 / Feature 3) */
           <div className="mb-4">
             <CreateTicketForm onViewTickets={() => setActiveView("my-tickets")} />
           </div>
+        ) : activeView === "detail" && selectedTicketId ? (
+          /* Ticket Detail View (Feature 9 / Feature 5) */
+          <div className="mb-4">
+            <RequesterTicketDetail
+              ticketId={selectedTicketId}
+              onBack={() => {
+                setActiveView("my-tickets");
+                setSelectedTicketId(null);
+              }}
+            />
+          </div>
         ) : (
           /* My Tickets View (Feature 8 / Feature 4) */
           <div className="mb-4">
-            <MyTickets onCreateTicket={() => setActiveView("create")} />
+            <MyTickets
+              onCreateTicket={() => setActiveView("create")}
+              onViewTicket={(ticketId) => {
+                setSelectedTicketId(ticketId);
+                setActiveView("detail");
+              }}
+            />
           </div>
         )}
 
@@ -98,10 +127,10 @@ function AppContent({ initialView = "create" }: AppContentProps) {
   );
 }
 
-export default function App({ initialView = "create" }: AppContentProps) {
+export default function App({ initialView = "create", initialTicketId = null }: AppContentProps) {
   return (
     <RequesterProvider>
-      <AppContent initialView={initialView} />
+      <AppContent initialView={initialView} initialTicketId={initialTicketId} />
     </RequesterProvider>
   );
 }
