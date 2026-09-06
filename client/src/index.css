@@ -37,14 +37,23 @@
   --zen-container-max-w:    1320px;  /* DR-04: Desktop container max width */
 }
 
-body {
+html, body {
   font-family: var(--zen-font-family);
   background-color: var(--zen-page-bg);
   color: var(--zen-text-primary);
   font-size: var(--zen-font-size-base);
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
 }
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
 
 /* Primary CTA Button (DR-09) */
 .btn-zen-primary {
@@ -194,15 +203,29 @@ body {
   100% { background-position: -200% 0; }
 }
 
-/* Responsive Touch Target (DR-12) */
+/* Responsive Touch Target (DR-12) & Mobile Layout Polish */
 @media (max-width: 767.98px) {
-  .btn-zen-primary, .btn-zen-outline, .form-control, .form-select, .priority-pill {
+  .btn-zen-primary,
+  .btn-zen-outline,
+  .btn-outline-danger,
+  .btn-zen-danger,
+  .form-control,
+  .form-select,
+  .priority-pill {
     min-height: 48px;
+    min-width: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
+
+  .container, .container-fluid {
+    padding-left: 16px;
+    padding-right: 16px;
+    overflow-x: hidden;
+  }
 }
+
 
 /* --- Feature 8: My Tickets UI Tokens & Styles --- */
 
