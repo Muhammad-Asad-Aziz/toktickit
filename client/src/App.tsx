@@ -3,16 +3,20 @@ import { checkSystem, Category } from "./api.js";
 import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
 import AppHeader from "./components/AppHeader.js";
 import RequesterModal from "./components/RequesterModal.js";
-
 import CreateTicketForm from "./components/CreateTicketForm.js";
+import MyTickets from "./components/MyTickets.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 
-function AppContent() {
+interface AppContentProps {
+  initialView?: "create" | "my-tickets";
+}
+
+function AppContent({ initialView = "create" }: AppContentProps) {
+  const [activeView, setActiveView] = useState<"create" | "my-tickets">(initialView);
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
   const { currentRequester, offlineWarning } = useRequester();
-
 
   async function handleCheck() {
     setState("loading");
@@ -27,7 +31,7 @@ function AppContent() {
 
   return (
     <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
-      <AppHeader />
+      <AppHeader activeView={activeView} onViewChange={setActiveView} />
 
       {offlineWarning && (
         <div className="alert alert-warning mb-0 text-center rounded-0 py-2 border-0" role="alert">
@@ -35,11 +39,21 @@ function AppContent() {
         </div>
       )}
 
-      <main className="container py-4 flex-grow-1" style={{ maxWidth: 860 }}>
-        {/* Create Ticket Form (Feature 7 / Feature 3) */}
-        <div className="mb-4">
-          <CreateTicketForm />
-        </div>
+      <main
+        className="container py-4 flex-grow-1"
+        style={{ maxWidth: activeView === "my-tickets" ? 1320 : 860 }}
+      >
+        {activeView === "create" ? (
+          /* Create Ticket Form View (Feature 7 / Feature 3) */
+          <div className="mb-4">
+            <CreateTicketForm onViewTickets={() => setActiveView("my-tickets")} />
+          </div>
+        ) : (
+          /* My Tickets View (Feature 8 / Feature 4) */
+          <div className="mb-4">
+            <MyTickets onCreateTicket={() => setActiveView("create")} />
+          </div>
+        )}
 
         {/* System Status / Health Check (Preserved Lab 1 Baseline) */}
         <div className="card shadow-sm border-0" style={{ borderRadius: 8 }}>
@@ -79,17 +93,15 @@ function AppContent() {
         </div>
       </main>
 
-
       <RequesterModal />
     </div>
   );
 }
 
-
-export default function App() {
+export default function App({ initialView = "create" }: AppContentProps) {
   return (
     <RequesterProvider>
-      <AppContent />
+      <AppContent initialView={initialView} />
     </RequesterProvider>
   );
 }

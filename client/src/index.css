@@ -203,3 +203,184 @@ body {
     justify-content: center;
   }
 }
+
+/* --- Feature 8: My Tickets UI Tokens & Styles --- */
+
+/* Status Badges */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9999px;
+  line-height: 1.2;
+}
+
+.badge-status-new {
+  background-color: #EAF6EF;
+  color: #006B3C;
+  border: 1px solid #C4E5D2;
+}
+
+.badge-status-assigned {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.badge-status-in-progress {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.badge-status-pending-requester {
+  background-color: #F3E8FF;
+  color: #6B21A8;
+  border: 1px solid #E9D5FF;
+}
+
+.badge-status-resolved,
+.badge-status-closed {
+  background-color: #F3F4F6;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+}
+
+.badge-status-cancelled {
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+/* Priority Badges */
+.badge-priority {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--zen-border-radius);
+  line-height: 1.2;
+}
+
+.badge-priority-low {
+  background-color: #E5E7EB;
+  color: #374151;
+}
+
+.badge-priority-medium {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badge-priority-high {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-priority-urgent {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.badge-priority-unassigned {
+  background-color: #F3F4F6;
+  color: #6B7280;
+  font-weight: 400;
+}
+
+/* Table Enhancements (DR-07, DR-17) */
+.my-tickets-table thead th {
+  background-color: #F5F7F6;
+  color: var(--zen-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--zen-border-neutral);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.my-tickets-table thead th.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease-in-out;
+}
+
+.my-tickets-table thead th.sortable-th:hover {
+  color: var(--zen-primary-green);
+}
+
+.my-tickets-table tbody tr {
+  transition: background-color 0.15s ease-in-out;
+  min-height: 52px;
+}
+
+.my-tickets-table tbody tr:hover {
+  background-color: var(--zen-pale-green);
+}
+
+.my-tickets-table td {
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+.ticket-number-cell {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--zen-primary-green);
+}
+
+/* Mobile Stacked Card (DR-10, DR-12) */
+.my-tickets-mobile-card {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border-neutral);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.my-tickets-mobile-card:hover {
+  border-color: var(--zen-secondary-green);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Pagination Control Styling */
+.zen-page-btn {
+  min-width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--zen-border-radius);
+  border: 1px solid var(--zen-border-neutral);
+  background: #ffffff;
+  color: var(--zen-text-primary);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 0 10px;
+  transition: all 0.15s ease-in-out;
+}
+
+.zen-page-btn:hover:not(:disabled) {
+  background-color: var(--zen-pale-green);
+  border-color: var(--zen-secondary-green);
+  color: var(--zen-secondary-green);
+}
+
+.zen-page-btn.active {
+  background-color: var(--zen-primary-green);
+  border-color: var(--zen-primary-green);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.zen-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}

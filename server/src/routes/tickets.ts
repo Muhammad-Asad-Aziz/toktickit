@@ -386,3 +386,207 @@ export async function createTicket(req: Request, res: Response) {
     });
   }
 }
+
+/**
+ * GET /api/tickets & GET /api/v1/tickets
+ * Query tickets owned by the active Requester with search, filters, sorting, and pagination
+ */
+export async function getTickets(req: Request, res: Response) {
+  try {
+    const rawRequesterId = req.headers["x-requester-id"];
+    const requesterId = parseInt(rawRequesterId as string, 10);
+
+    // 1. Mandatory header check (strict requester isolation)
+    // Any incoming req.query.requesterId is strictly ignored
+    if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
+      return res.status(400).json({
+        error: {
+          code: "MISSING_REQUESTER_ID",
+          message: "A valid requester ID must be provided via the 'x-requester-id' header.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // 2. Verify active requester
+    const prisma = getPrisma();
+    const requester = await prisma.requesterUser.findUnique({
+      where: { id: requesterId },
+    });
+
+    if (!requester || !requester.isActive) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_FAILED",
+          message: "The specified development requester is inactive or does not exist.",
+          fieldErrors: [{ field: "requesterId", message: "Requester must be an active development user." }],
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // 3. Extract query parameters
+    const {
+      search,
+      category,
+      requestedPriority,
+      itPriority,
+      status,
+      sortBy,
+      sortOrder,
+      page: queryPage,
+      pageSize: queryPageSize,
+    } = req.query;
+
+    // 4. Build Prisma where clause with hard ownership invariant
+    const whereClause: any = {
+      AND: [
+        { requesterId }, // INVARIANT: Strict cross-requester data isolation
+      ],
+    };
+
+    // Search filter (ticketNumber or summary case-insensitive substring)
+    if (typeof search === "string" && search.trim().length > 0) {
+      const term = search.trim();
+      whereClause.AND.push({
+        OR: [
+          { ticketNumber: { contains: term, mode: "insensitive" } },
+          { summary: { contains: term, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    // Category filter (ID or name)
+    if (category) {
+      const catNum = parseInt(category as string, 10);
+      if (!isNaN(catNum)) {
+        whereClause.AND.push({ categoryId: catNum });
+      } else if (typeof category === "string" && category.trim().length > 0) {
+        whereClause.AND.push({
+          category: { name: { equals: category.trim(), mode: "insensitive" } },
+        });
+      }
+    }
+
+    // Requested priority filter
+    if (typeof requestedPriority === "string" && requestedPriority.trim().length > 0) {
+      whereClause.AND.push({
+        requestedPriority: { equals: requestedPriority.trim(), mode: "insensitive" },
+      });
+    }
+
+    // IT priority filter (handles "UNASSIGNED" -> null)
+    if (typeof itPriority === "string" && itPriority.trim().length > 0) {
+      if (itPriority.trim().toUpperCase() === "UNASSIGNED") {
+        whereClause.AND.push({ itPriority: null });
+      } else {
+        whereClause.AND.push({
+          itPriority: { equals: itPriority.trim(), mode: "insensitive" },
+        });
+      }
+    }
+
+    // Status filter
+    if (typeof status === "string" && status.trim().length > 0) {
+      whereClause.AND.push({
+        currentStatus: { equals: status.trim(), mode: "insensitive" },
+      });
+    }
+
+    // 5. Pagination mathematics & boundary normalization
+    const parsedPage = parseInt(queryPage as string, 10);
+    const page = Math.max(1, isNaN(parsedPage) ? 1 : parsedPage);
+
+    const allowedPageSizes = [10, 25, 50];
+    const parsedPageSize = parseInt(queryPageSize as string, 10);
+    const pageSize = allowedPageSizes.includes(parsedPageSize) ? parsedPageSize : 10;
+
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    // 6. Sorting configuration
+    const allowedSortFields: Record<string, string> = {
+      createdat: "createdAt",
+      ticketnumber: "ticketNumber",
+      ticketno: "ticketNumber",
+      summary: "summary",
+      updatedat: "updatedAt",
+      requestedpriority: "requestedPriority",
+      itpriority: "itPriority",
+      currentstatus: "currentStatus",
+      status: "currentStatus",
+    };
+
+    const sortField =
+      typeof sortBy === "string" && allowedSortFields[sortBy.toLowerCase()]
+        ? allowedSortFields[sortBy.toLowerCase()]
+        : "createdAt";
+
+    const sortDirection =
+      typeof sortOrder === "string" && sortOrder.toLowerCase() === "asc" ? "asc" : "desc";
+
+    const orderBy = { [sortField]: sortDirection };
+
+    // 7. Execute count and findMany in parallel
+    const [totalCount, tickets] = await Promise.all([
+      prisma.ticket.count({ where: whereClause }),
+      prisma.ticket.findMany({
+        where: whereClause,
+        skip,
+        take,
+        orderBy,
+        include: {
+          category: true,
+          relatedSystem: true,
+          attachments: {
+            where: { isRemoved: false },
+            select: { id: true },
+          },
+        },
+      }),
+    ]);
+
+    const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / pageSize);
+
+    // 8. Serialize response with compatibility aliases
+    const items = tickets.map((t) => ({
+      id: t.id,
+      ticketNumber: t.ticketNumber,
+      ticketNo: t.ticketNumber, // Compatibility alias
+      summary: t.summary,
+      requestedPriority: t.requestedPriority,
+      itPriority: t.itPriority,
+      currentStatus: t.currentStatus,
+      status: t.currentStatus, // Compatibility alias
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+      category: {
+        id: t.category.id,
+        code: t.category.code,
+        name: t.category.name,
+      },
+      relatedSystem: {
+        id: t.relatedSystem.id,
+        name: t.relatedSystem.name,
+      },
+      attachmentCount: t.attachments.length,
+    }));
+
+    return res.status(200).json({
+      items,
+      totalCount,
+      totalPages,
+      currentPage: page,
+      page, // Compatibility alias
+      pageSize,
+    });
+  } catch {
+    return res.status(500).json({
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An unexpected error occurred while retrieving tickets.",
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+}
