@@ -165,3 +165,98 @@ export async function createTicket(
   return res.json();
 }
 
+export interface TicketSummaryItem {
+  id: number;
+  ticketNumber: string;
+  ticketNo?: string;
+  requesterId: number;
+  categoryId: number;
+  relatedSystemId: number;
+  summary: string;
+  description: string;
+  requestedPriority: string;
+  itPriority: string | null;
+  currentStatus: string;
+  status?: string;
+  createdAt: string;
+  updatedAt: string;
+  attachmentCount: number;
+  requester: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  category: {
+    id: number;
+    code?: string | null;
+    name: string;
+  };
+  relatedSystem: {
+    id: number;
+    name: string;
+  };
+}
+
+export interface TicketListResponse {
+  items: TicketSummaryItem[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  page?: number;
+  pageSize: number;
+}
+
+export interface GetTicketsParams {
+  search?: string;
+  category?: string | number;
+  requestedPriority?: string;
+  itPriority?: string;
+  status?: string;
+  sortBy?: "ticketNumber" | "createdAt" | "summary" | "requestedPriority" | "itPriority" | "currentStatus";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+export async function fetchTickets(
+  requesterId: number,
+  params: GetTicketsParams = {},
+  signal?: AbortSignal
+): Promise<TicketListResponse> {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  if (params.category !== undefined && params.category !== "") query.set("category", String(params.category));
+  if (params.requestedPriority) query.set("requestedPriority", params.requestedPriority);
+  if (params.itPriority) query.set("itPriority", params.itPriority);
+  if (params.status) query.set("status", params.status);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+  if (params.page !== undefined) query.set("page", String(params.page));
+  if (params.pageSize !== undefined) query.set("pageSize", String(params.pageSize));
+
+  const queryString = query.toString();
+  const url = `${API_URL}/api/tickets${queryString ? `?${queryString}` : ""}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "x-requester-id": String(requesterId),
+    },
+    signal,
+  });
+
+  if (!res.ok) {
+    let errorData: ApiErrorResponse | undefined;
+    try {
+      errorData = await res.json();
+    } catch {
+      // ignore
+    }
+    const message = errorData?.error?.message || "Failed to fetch tickets";
+    const error = new Error(message) as Error & { code?: string };
+    error.code = errorData?.error?.code;
+    throw error;
+  }
+
+  return res.json();
+}

@@ -22,7 +22,11 @@ interface FormErrors {
   description?: string;
 }
 
-export default function CreateTicketForm() {
+interface CreateTicketFormProps {
+  onViewTickets?: () => void;
+}
+
+export default function CreateTicketForm({ onViewTickets }: CreateTicketFormProps = {}) {
   const { currentRequester, openModal } = useRequester();
 
   // Reference data
@@ -367,6 +371,15 @@ export default function CreateTicketForm() {
             >
               Create Another Ticket
             </button>
+            {onViewTickets && (
+              <button
+                type="button"
+                className="btn btn-zen-outline px-4 py-2"
+                onClick={onViewTickets}
+              >
+                View in My Tickets ➔
+              </button>
+            )}
           </div>
         </div>
       </div>
