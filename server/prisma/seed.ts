@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { getPrisma } from "../src/prisma.js";
 
 export async function seed(prismaClient = getPrisma()) {
@@ -36,21 +37,183 @@ export async function seed(prismaClient = getPrisma()) {
     });
   }
 
-  // 3. Development Requesters (4 Active + 1 Inactive)
-  const requesters = [
-    { name: "Sompong IT", email: "sompong.it@kmutt.ac.th", department: "Information Technology Office", isActive: true },
-    { name: "Anong Staff", email: "anong.sta@kmutt.ac.th", department: "Academic Affairs Office", isActive: true },
-    { name: "Kittisak Student", email: "kittisak.stu@kmutt.ac.th", department: "Computer Engineering Dept", isActive: true },
-    { name: "Wichai Faculty", email: "wichai.fac@kmutt.ac.th", department: "Department of Mathematics", isActive: true },
-    { name: "Prasert Inactive", email: "prasert.ina@kmutt.ac.th", department: "Human Resources Office", isActive: false },
+  // 3. Authenticated Users (Requesters, IT Staff, Administrators)
+  const defaultPasswordHash = bcrypt.hashSync("Password123!", 10);
+  const initialPasswordHash = bcrypt.hashSync("InitialPass123!", 10);
+
+  const users = [
+    // Requesters (Active & Inactive, reconciling Lab 2 and Lab 3)
+    {
+      name: "Sompong IT",
+      email: "sompong.it@kmutt.ac.th",
+      department: "Information Technology Office",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Anong Staff",
+      email: "anong.sta@kmutt.ac.th",
+      department: "Academic Affairs Office",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Anong Staff",
+      email: "anong.st@kmutt.ac.th",
+      department: "Academic Affairs Office",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Kittisak Student",
+      email: "kittisak.stu@kmutt.ac.th",
+      department: "Computer Engineering Dept",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Mana Student",
+      email: "mana.st@kmutt.ac.th",
+      department: "Computer Engineering Dept",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Wichai Faculty",
+      email: "wichai.fac@kmutt.ac.th",
+      department: "Department of Mathematics",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Kanda Faculty",
+      email: "kanda.fc@kmutt.ac.th",
+      department: "Department of Mathematics",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Prasert Inactive",
+      email: "prasert.ina@kmutt.ac.th",
+      department: "Human Resources Office",
+      role: "REQUESTER" as const,
+      isActive: false,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Prasert Inactive",
+      email: "prasert.in@kmutt.ac.th",
+      department: "Human Resources Office",
+      role: "REQUESTER" as const,
+      isActive: false,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "New Requester",
+      email: "new.requester@kmutt.ac.th",
+      department: "Science Faculty",
+      role: "REQUESTER" as const,
+      isActive: true,
+      mustChangePassword: true,
+      passwordHash: initialPasswordHash,
+    },
+
+    // IT Staff (Active & Inactive)
+    {
+      name: "Wichai IT",
+      email: "wichai.it@kmutt.ac.th",
+      department: "IT Infrastructure Services",
+      role: "IT_STAFF" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Nareerat IT",
+      email: "nareerat.it@kmutt.ac.th",
+      department: "Campus Network Operations",
+      role: "IT_STAFF" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Ekachai IT",
+      email: "ekachai.it@kmutt.ac.th",
+      department: "User Support Services",
+      role: "IT_STAFF" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Inactive Staff",
+      email: "inactive.staff@kmutt.ac.th",
+      department: "Former IT Resolver",
+      role: "IT_STAFF" as const,
+      isActive: false,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+
+    // Administrators
+    {
+      name: "Admin TokTick",
+      email: "admin.toktick@kmutt.ac.th",
+      department: "IT Central Administration",
+      role: "ADMINISTRATOR" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
+    {
+      name: "Backup Admin",
+      email: "backup.admin@kmutt.ac.th",
+      department: "Disaster Recovery Services",
+      role: "ADMINISTRATOR" as const,
+      isActive: true,
+      mustChangePassword: false,
+      passwordHash: defaultPasswordHash,
+    },
   ];
 
-  for (const user of requesters) {
+  for (const user of users) {
     const normalizedEmail = user.email.trim().toLowerCase();
-    await prismaClient.requesterUser.upsert({
+    await prismaClient.user.upsert({
       where: { email: normalizedEmail },
-      update: { name: user.name, department: user.department, isActive: user.isActive },
-      create: { name: user.name, email: normalizedEmail, department: user.department, isActive: user.isActive },
+      update: {
+        name: user.name,
+        department: user.department,
+        role: user.role,
+        isActive: user.isActive,
+        mustChangePassword: user.mustChangePassword,
+        passwordHash: user.passwordHash,
+      },
+      create: {
+        name: user.name,
+        email: normalizedEmail,
+        department: user.department,
+        role: user.role,
+        isActive: user.isActive,
+        mustChangePassword: user.mustChangePassword,
+        passwordHash: user.passwordHash,
+      },
     });
   }
 }
