@@ -219,7 +219,7 @@ export async function createTicket(req: Request, res: Response) {
   // 2. Validate field inputs
   const fieldErrors: FieldError[] = [];
 
-  const rawRequesterId = req.body.requesterId ?? req.headers["x-requester-id"];
+  const rawRequesterId = req.user ? req.user.id : (req.body.requesterId ?? req.headers["x-requester-id"]);
   const requesterId = Number(rawRequesterId);
   if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
     fieldErrors.push({
@@ -303,7 +303,7 @@ export async function createTicket(req: Request, res: Response) {
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Verify requester exists and is active (BR-09)
-      const requester = await tx.requesterUser.findUnique({
+      const requester = await tx.user.findUnique({
         where: { id: requesterId },
       });
       if (!requester || !requester.isActive) {
@@ -454,8 +454,8 @@ export async function createTicket(req: Request, res: Response) {
  */
 export async function getTickets(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     // 1. Mandatory header check (strict requester isolation)
     // Any incoming req.query.requesterId is strictly ignored
@@ -471,7 +471,7 @@ export async function getTickets(req: Request, res: Response) {
 
     // 2. Verify active requester
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 
@@ -658,8 +658,8 @@ export async function getTickets(req: Request, res: Response) {
  */
 export async function getTicketById(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
       return res.status(400).json({
@@ -672,7 +672,7 @@ export async function getTicketById(req: Request, res: Response) {
     }
 
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 
@@ -811,8 +811,8 @@ export async function uploadAttachment(req: Request, res: Response) {
   const file = req.file;
 
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
       if (file?.path && fs.existsSync(file.path)) {
@@ -828,7 +828,7 @@ export async function uploadAttachment(req: Request, res: Response) {
     }
 
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 
@@ -978,8 +978,8 @@ export async function uploadAttachment(req: Request, res: Response) {
  */
 export async function downloadAttachment(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
       return res.status(400).json({
@@ -992,7 +992,7 @@ export async function downloadAttachment(req: Request, res: Response) {
     }
 
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 
@@ -1091,8 +1091,8 @@ export async function downloadAttachment(req: Request, res: Response) {
  */
 export async function removeAttachment(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
       return res.status(400).json({
@@ -1105,7 +1105,7 @@ export async function removeAttachment(req: Request, res: Response) {
     }
 
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 

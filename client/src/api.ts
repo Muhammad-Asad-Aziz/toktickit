@@ -1,4 +1,8 @@
+import { User, LoginCredentials, ChangePasswordPayload, AuthResponse } from "./types/auth.js";
+
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
+export * from "./types/auth.js";
 
 export interface Category {
   id: number;
@@ -434,4 +438,84 @@ export async function softRemoveAttachment(
     attachment: normalizedAttachment,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Authentication API Functions (Lab 3 Feature 12)
+// ---------------------------------------------------------------------------
+
+export async function loginUser(credentials: LoginCredentials): Promise<AuthResponse> {
+  const res = await fetch(`${API_URL}/api/v1/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(credentials),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    const message = data.error?.message || "Invalid email or password";
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+export async function logoutUser(): Promise<{ message: string }> {
+  const res = await fetch(`${API_URL}/api/v1/auth/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to log out");
+  }
+
+  return data;
+}
+
+export async function fetchCurrentUser(): Promise<{ user: User }> {
+  const res = await fetch(`${API_URL}/api/v1/auth/me`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Unauthenticated");
+  }
+
+  return data;
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<AuthResponse> {
+  const res = await fetch(`${API_URL}/api/v1/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg =
+      data.error?.fieldErrors?.[0]?.message ||
+      data.error?.message ||
+      "Failed to update password";
+    throw new Error(errorMsg);
+  }
+
+  return data;
+}
+
 

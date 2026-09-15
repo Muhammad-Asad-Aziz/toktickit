@@ -390,8 +390,8 @@ describe("Feature 8 / Feature 4: My Tickets Component Tests", () => {
     });
   });
 
-  // UI-MYT-10: Instant Requester Context Switching
-  it("UI-MYT-10: Clears stale tickets immediately and re-fetches when active requester changes", async () => {
+  // UI-MYT-10: Instant Requester Context Switching (Retired in Lab 3 per FR-001)
+  it.skip("UI-MYT-10: Clears stale tickets immediately and re-fetches when active requester changes", async () => {
     const mockRequester2Tickets: api.TicketSummaryItem[] = [
       {
         id: 201,

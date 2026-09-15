@@ -1,9 +1,11 @@
 import { useState } from "react";
 import * as api from "./api.js";
 import { Category } from "./api.js";
-import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
+import { AuthProvider, useAuth } from "./context/AuthContext.js";
+import { RequesterProvider } from "./context/RequesterContext.js";
 import AppHeader from "./components/AppHeader.js";
-import RequesterModal from "./components/RequesterModal.js";
+import LoginView from "./components/LoginView.js";
+import ChangePasswordView from "./components/ChangePasswordView.js";
 import CreateTicketForm from "./components/CreateTicketForm.js";
 import MyTickets from "./components/MyTickets.js";
 import RequesterTicketDetail from "./components/RequesterTicketDetail.js";
@@ -16,11 +18,11 @@ interface AppContentProps {
 }
 
 function AppContent({ initialView = "create", initialTicketId = null }: AppContentProps) {
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail">(initialView);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(initialTicketId);
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
-  const { currentRequester, offlineWarning } = useRequester();
 
   async function handleCheck() {
     setState("loading");
@@ -38,18 +40,53 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
     setSelectedTicketId(null);
   };
 
+  // 1. Initial Session Loading State
+  if (isLoading) {
+    return (
+      <div
+        className="min-vh-100 d-flex flex-column justify-content-center align-items-center"
+        style={{ backgroundColor: "#F5F7F6" }}
+        data-testid="app-loading-state"
+      >
+        <div className="spinner-border text-success" role="status" style={{ width: "3rem", height: "3rem" }}>
+          <span className="visually-hidden">Loading TokTickIT...</span>
+        </div>
+        <p className="mt-3 text-muted">Loading TokTickIT Desk...</p>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated State -> Render Login View
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
+        <AppHeader />
+        <main className="container py-4 flex-grow-1">
+          <LoginView />
+        </main>
+      </div>
+    );
+  }
+
+  // 3. Mandatory First-Login Password Change Barrier (BR-02)
+  if (user.mustChangePassword) {
+    return (
+      <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
+        <AppHeader />
+        <main className="container py-4 flex-grow-1">
+          <ChangePasswordView />
+        </main>
+      </div>
+    );
+  }
+
+  // 4. Authenticated Operational Views
   return (
     <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
       <AppHeader
         activeView={activeView === "detail" ? "my-tickets" : activeView}
         onViewChange={handleHeaderViewChange}
       />
-
-      {offlineWarning && (
-        <div className="alert alert-warning mb-0 text-center rounded-0 py-2 border-0" role="alert">
-          <strong>Network warning:</strong> Unable to synchronize user identity with server. Working offline.
-        </div>
-      )}
 
       <main
         className="container py-4 flex-grow-1"
@@ -121,16 +158,16 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
           </div>
         </div>
       </main>
-
-      <RequesterModal />
     </div>
   );
 }
 
 export default function App({ initialView = "create", initialTicketId = null }: AppContentProps) {
   return (
-    <RequesterProvider>
-      <AppContent initialView={initialView} initialTicketId={initialTicketId} />
-    </RequesterProvider>
+    <AuthProvider>
+      <RequesterProvider>
+        <AppContent initialView={initialView} initialTicketId={initialTicketId} />
+      </RequesterProvider>
+    </AuthProvider>
   );
 }
