@@ -55,8 +55,10 @@ BEGIN
     FROM "requester_users"
     ON CONFLICT ("email") DO NOTHING;
     
-    -- Sync sequence
-    PERFORM setval('users_id_seq', COALESCE((SELECT MAX(id) FROM "users"), 1));
+    -- Sync sequence if data was migrated
+    IF (SELECT MAX(id) FROM "users") IS NOT NULL THEN
+      PERFORM setval('users_id_seq', (SELECT MAX(id) FROM "users"));
+    END IF;
 
     DROP TABLE "requester_users";
   END IF;
