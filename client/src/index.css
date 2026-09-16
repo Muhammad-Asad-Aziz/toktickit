@@ -31,6 +31,12 @@
   --zen-warning:            #D97706; /* Amber callouts and badges */
   --zen-success:            #2E7D32; /* Green confirmation icon and text */
 
+  /* Dual-Thread Collaboration Tokens (Issue 14) */
+  --zen-note-bg:            #FFFBEB; /* Confidential internal note canvas */
+  --zen-note-border:        #F59E0B; /* High-contrast amber barrier border */
+  --zen-comment-bg:         #EAF6EF; /* Public comment pale tint */
+  --zen-comment-border:     #0B7A46; /* Public comment subtle green border */
+
   /* Spacing Scale */
   --zen-field-spacing:      20px;    /* DR-02: Vertical margin between form fields */
   --zen-card-padding:       24px;    /* DR-03: Desktop card internal padding */
@@ -415,5 +421,83 @@ html, body {
     font-size: 13px;
     padding: 0 6px;
   }
+}
+
+/* Dual-Thread Collaboration & Staff Detail (Issue 14) */
+.btn-zen-amber {
+  background-color: #D97706;
+  color: #FFFFFF;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: var(--zen-border-radius);
+  min-height: var(--zen-control-height);
+  transition: background-color 0.15s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.btn-zen-amber:hover:not(:disabled) {
+  background-color: #B45309;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.25);
+}
+
+.btn-zen-amber:disabled {
+  background-color: #FCD34D;
+  color: #78350F;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.internal-note-container {
+  background-color: var(--zen-note-bg);
+  border: 2px solid var(--zen-note-border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.internal-note-banner {
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+  color: #92400E;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.internal-note-card {
+  background: #FFFFFF;
+  border: 1px solid #FCD34D;
+  border-left: 4px solid #F59E0B;
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.public-comment-card {
+  background: #FFFFFF;
+  border: 1px solid var(--zen-border-neutral);
+  border-left: 4px solid var(--zen-primary-green);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.requester-resolved-banner {
+  background-color: #EAF6EF;
+  border: 1px solid #2E7D32;
+  border-left: 4px solid #006B3C;
+  color: #0F5132;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 

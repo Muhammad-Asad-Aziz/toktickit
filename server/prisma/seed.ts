@@ -423,6 +423,60 @@ export async function seed(prismaClient = getPrisma()) {
       },
     });
   }
+
+  // 5. Seed Public Comments and Internal Notes (Issue 14 Increment)
+  const ticket1 = await prismaClient.ticket.findUnique({
+    where: { ticketNumber: "TKT-2026-00001" },
+  });
+  const sompongUser = userMap.get("sompong.it@kmutt.ac.th");
+  const wichaiStaff = userMap.get("wichai.it@kmutt.ac.th");
+  const adminUser = userMap.get("admin.toktick@kmutt.ac.th");
+
+  if (ticket1 && sompongUser && wichaiStaff && adminUser) {
+    const commentCount = await prismaClient.publicComment.count({
+      where: { ticketId: ticket1.id },
+    });
+    if (commentCount === 0) {
+      await prismaClient.publicComment.createMany({
+        data: [
+          {
+            ticketId: ticket1.id,
+            authorId: sompongUser,
+            content: "The Wi-Fi dropped again during my 10 AM lecture in CB2 3rd floor.",
+            createdAt: new Date("2026-09-03T11:00:00.000Z"),
+          },
+          {
+            ticketId: ticket1.id,
+            authorId: wichaiStaff,
+            content: "Access point CB2-AP-04 has been rebooted. Please check if signal stabilizes.",
+            createdAt: new Date("2026-09-03T13:30:00.000Z"),
+          },
+        ],
+      });
+    }
+
+    const noteCount = await prismaClient.internalNote.count({
+      where: { ticketId: ticket1.id },
+    });
+    if (noteCount === 0) {
+      await prismaClient.internalNote.createMany({
+        data: [
+          {
+            ticketId: ticket1.id,
+            authorId: wichaiStaff,
+            content: "Network switch firmware on 3rd floor rack needs patch. Scheduled maintenance window Friday 10 PM.",
+            createdAt: new Date("2026-09-03T13:15:00.000Z"),
+          },
+          {
+            ticketId: ticket1.id,
+            authorId: adminUser,
+            content: "Vendor TAC case #98432 opened with Cisco for transceiver replacements.",
+            createdAt: new Date("2026-09-03T14:00:00.000Z"),
+          },
+        ],
+      });
+    }
+  }
 }
 
 // CLI execution wrapper

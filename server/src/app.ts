@@ -15,6 +15,9 @@ import {
   removeAttachment,
   handleUploadMiddleware,
   handleSingleUploadMiddleware,
+  indicateProblemResolved,
+  appendPublicComment,
+  appendInternalNote,
 } from "./routes/tickets.js";
 import { staffTicketsRouter } from "./routes/staffTickets.js";
 
@@ -117,5 +120,17 @@ app.get("/api/v1/attachments/:id/download", requirePasswordChanged, downloadAtta
 
 app.delete("/api/attachments/:id", requirePasswordChanged, removeAttachment);
 app.delete("/api/v1/attachments/:id", requirePasswordChanged, removeAttachment);
+
+// ---------------------------------------------------------------------------
+// Ticket Operational Actions & Collaboration (Issue 14)
+// ---------------------------------------------------------------------------
+app.post("/api/tickets/:id/resolve-request", requirePasswordChanged, indicateProblemResolved);
+app.post("/api/v1/tickets/:id/resolve-request", requirePasswordChanged, indicateProblemResolved);
+
+app.post("/api/tickets/:id/comments", requirePasswordChanged, appendPublicComment);
+app.post("/api/v1/tickets/:id/comments", requirePasswordChanged, appendPublicComment);
+
+app.post("/api/tickets/:id/notes", requirePasswordChanged, appendInternalNote);
+app.post("/api/v1/tickets/:id/notes", requirePasswordChanged, appendInternalNote);
 
 export default app;

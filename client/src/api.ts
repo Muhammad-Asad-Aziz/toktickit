@@ -87,6 +87,41 @@ export interface Attachment {
   uploadedAt?: string;
 }
 
+export interface PublicCommentDTO {
+  id: number;
+  ticketId: number;
+  authorId: number;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    name: string;
+    email?: string;
+    role: "REQUESTER" | "IT_STAFF" | "ADMINISTRATOR";
+  };
+}
+
+export interface InternalNoteDTO {
+  id: number;
+  ticketId: number;
+  authorId: number;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    name: string;
+    email?: string;
+    role: "IT_STAFF" | "ADMINISTRATOR";
+  };
+}
+
+export interface AssigneeOption {
+  id: number;
+  name: string;
+  email: string;
+  role: "IT_STAFF" | "ADMINISTRATOR";
+}
+
 export interface Ticket {
   id: number;
   ticketNumber: string;
@@ -101,6 +136,14 @@ export interface Ticket {
   currentStatus: string;
   status?: string;
   ticketOwner?: string | null;
+  ownerId?: number | null;
+  owner?: {
+    id: number;
+    name: string;
+    email?: string;
+    role?: string;
+  } | null;
+  requesterResolvedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   requester: {
@@ -120,7 +163,11 @@ export interface Ticket {
     name: string;
   };
   attachments: Attachment[];
+  publicComments?: PublicCommentDTO[];
+  internalNotes?: InternalNoteDTO[];
 }
+
+export type StaffTicketDetailDTO = Ticket;
 
 export interface CreateTicketData {
   requesterId: number;
@@ -278,13 +325,19 @@ export async function fetchTickets(
 
 export async function fetchTicketById(
   id: number,
-  requesterId: number
+  requesterId?: number
 ): Promise<Ticket> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+  if (requesterId) {
+    headers["x-requester-id"] = String(requesterId);
+  }
+
   const res = await fetch(`${API_URL}/api/tickets/${id}`, {
     method: "GET",
-    headers: {
-      "x-requester-id": String(requesterId),
-    },
+    headers,
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -301,7 +354,8 @@ export async function fetchTicketById(
     throw error;
   }
 
-  return res.json();
+  const data = await res.json();
+  return data.ticket ?? data;
 }
 
 export async function uploadAttachment(
@@ -609,3 +663,177 @@ export async function fetchStaffTickets(
 
   return data;
 }
+
+export async function fetchStaffTicketDetail(id: number): Promise<StaffTicketDetailDTO> {
+  const res = await fetch(`${API_URL}/api/v1/tickets/${id}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    let errorData: ApiErrorResponse | undefined;
+    try {
+      errorData = await res.json();
+    } catch {
+      // ignore
+    }
+    const message = errorData?.error?.message || "Failed to fetch ticket details";
+    const error = new Error(message) as Error & { code?: string; status?: number };
+    error.code = errorData?.error?.code;
+    error.status = res.status;
+    throw error;
+  }
+
+  const data = await res.json();
+  return data.ticket ?? data;
+}
+
+export async function fetchAssignees(): Promise<AssigneeOption[]> {
+  const res = await fetch(`${API_URL}/api/v1/staff/tickets/assignees`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to fetch assignees");
+  }
+
+  return Array.isArray(data) ? data : (data.assignees || []);
+}
+
+export async function assignTicketOwner(
+  ticketId: number,
+  ownerId: number | null
+): Promise<{ message: string; owner: AssigneeOption | null }> {
+  const res = await fetch(`${API_URL}/api/v1/staff/tickets/${ticketId}/assignment`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ ownerId }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to update ticket assignment");
+  }
+
+  return data;
+}
+
+export async function updateTicketPriority(
+  ticketId: number,
+  itPriority: string
+): Promise<{ message: string; itPriority: string }> {
+  const res = await fetch(`${API_URL}/api/v1/staff/tickets/${ticketId}/priority`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ itPriority }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to update IT priority");
+  }
+
+  return data;
+}
+
+export async function transitionTicketStatus(
+  ticketId: number,
+  status: string
+): Promise<{ message: string; currentStatus: string }> {
+  const res = await fetch(`${API_URL}/api/v1/staff/tickets/${ticketId}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ status }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to transition ticket status");
+  }
+
+  return data;
+}
+
+export async function indicateProblemResolved(
+  ticketId: number
+): Promise<{ message: string; requesterResolvedAt: string }> {
+  const res = await fetch(`${API_URL}/api/v1/tickets/${ticketId}/resolve-request`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to record resolution request");
+  }
+
+  return data;
+}
+
+export async function postPublicComment(
+  ticketId: number,
+  content: string
+): Promise<{ comment: PublicCommentDTO }> {
+  const res = await fetch(`${API_URL}/api/v1/tickets/${ticketId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ content }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to post public comment");
+  }
+
+  return data;
+}
+
+export async function postInternalNote(
+  ticketId: number,
+  content: string
+): Promise<{ note: InternalNoteDTO }> {
+  const res = await fetch(`${API_URL}/api/v1/tickets/${ticketId}/notes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ content }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to post internal note");
+  }
+
+  return data;
+}
+
