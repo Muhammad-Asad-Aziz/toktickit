@@ -650,16 +650,16 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
         {/* Pagination Bar Controls */}
         {!isLoading && totalCount > 0 && (
           <div
-            className="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-4 border-top mt-3"
+            className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 pt-4 border-top mt-3"
             style={{ borderColor: "var(--zen-border-neutral)" }}
           >
             {/* Showing Count Text */}
-            <div className="text-muted small">
+            <div className="text-muted small text-center text-md-start">
               Showing {startRecord} to {endRecord} of {totalCount} tickets
             </div>
 
             {/* Pagination Controls & Rows-per-page Selector */}
-            <div className="d-flex align-items-center gap-3">
+            <div className="d-flex flex-wrap justify-content-center justify-content-md-end align-items-center gap-2 gap-sm-3 w-100 w-md-auto">
               <div className="d-flex align-items-center gap-2">
                 <label htmlFor="staff-page-size" className="small text-muted mb-0">
                   Rows:
@@ -682,28 +682,41 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
                 </select>
               </div>
 
-              <div className="d-flex align-items-center gap-1">
+              <div className="d-flex align-items-center gap-1 flex-wrap justify-content-center">
                 <button
                   type="button"
                   className="zen-page-btn"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   data-testid="prev-page-button"
+                  aria-label="Previous Page"
                 >
                   Previous
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    className={`zen-page-btn ${page === p ? "active" : ""}`}
-                    onClick={() => setPage(p)}
-                    data-testid={`page-button-${p}`}
-                  >
-                    {p}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => {
+                    if (totalPages <= 5) return true;
+                    return Math.abs(p - page) <= 1 || p === 1 || p === totalPages;
+                  })
+                  .map((p, idx, arr) => {
+                    const showEllipsisBefore = idx > 0 && p - arr[idx - 1] > 1;
+                    return (
+                      <span key={p} className="d-inline-flex align-items-center gap-1">
+                        {showEllipsisBefore && <span className="text-muted px-1 small">…</span>}
+                        <button
+                          type="button"
+                          className={`zen-page-btn ${page === p ? "active" : ""}`}
+                          onClick={() => setPage(p)}
+                          data-testid={`page-button-${p}`}
+                          aria-label={`Page ${p}`}
+                          aria-current={page === p ? "page" : undefined}
+                        >
+                          {p}
+                        </button>
+                      </span>
+                    );
+                  })}
 
                 <button
                   type="button"
@@ -711,6 +724,7 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   data-testid="next-page-button"
+                  aria-label="Next Page"
                 >
                   Next
                 </button>

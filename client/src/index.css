@@ -407,3 +407,13 @@ html, body {
   cursor: not-allowed;
   background-color: #f9fafb;
 }
+
+@media (max-width: 575.98px) {
+  .zen-page-btn {
+    min-width: 32px;
+    height: 36px;
+    font-size: 13px;
+    padding: 0 6px;
+  }
+}
+

@@ -15,25 +15,19 @@ ALTER TABLE "tickets" ADD COLUMN IF NOT EXISTS "ownerId" INTEGER;
 -- Ensure columns use Enums safely
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'requestedPriority' AND data_type = 'character varying') THEN
-    ALTER TABLE "tickets" ALTER COLUMN "requestedPriority" TYPE "Priority" USING UPPER("requestedPriority")::"Priority";
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'requestedPriority' AND data_type = 'text') THEN
-    ALTER TABLE "tickets" ALTER COLUMN "requestedPriority" TYPE "Priority" USING UPPER("requestedPriority")::"Priority";
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'requestedPriority' AND data_type IN ('character varying', 'text')) THEN
+    ALTER TABLE "tickets" ALTER COLUMN "requestedPriority" DROP DEFAULT;
+    ALTER TABLE "tickets" ALTER COLUMN "requestedPriority" TYPE "Priority" USING UPPER("requestedPriority"::text)::"Priority";
   END IF;
   
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'itPriority' AND data_type = 'character varying') THEN
-    ALTER TABLE "tickets" ALTER COLUMN "itPriority" TYPE "Priority" USING COALESCE(UPPER("itPriority")::"Priority", UPPER("requestedPriority")::"Priority", 'MEDIUM'::"Priority");
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'itPriority' AND data_type = 'text') THEN
-    ALTER TABLE "tickets" ALTER COLUMN "itPriority" TYPE "Priority" USING COALESCE(UPPER("itPriority")::"Priority", UPPER("requestedPriority")::"Priority", 'MEDIUM'::"Priority");
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'itPriority' AND data_type IN ('character varying', 'text')) THEN
+    ALTER TABLE "tickets" ALTER COLUMN "itPriority" DROP DEFAULT;
+    ALTER TABLE "tickets" ALTER COLUMN "itPriority" TYPE "Priority" USING COALESCE(UPPER("itPriority"::text)::"Priority", "requestedPriority", 'MEDIUM'::"Priority");
   END IF;
 
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'currentStatus' AND data_type = 'character varying') THEN
-    ALTER TABLE "tickets" ALTER COLUMN "currentStatus" TYPE "TicketStatus" USING UPPER("currentStatus")::"TicketStatus";
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'currentStatus' AND data_type = 'text') THEN
-    ALTER TABLE "tickets" ALTER COLUMN "currentStatus" TYPE "TicketStatus" USING UPPER("currentStatus")::"TicketStatus";
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'currentStatus' AND data_type IN ('character varying', 'text')) THEN
+    ALTER TABLE "tickets" ALTER COLUMN "currentStatus" DROP DEFAULT;
+    ALTER TABLE "tickets" ALTER COLUMN "currentStatus" TYPE "TicketStatus" USING UPPER(REPLACE("currentStatus"::text, ' ', '_'))::"TicketStatus";
   END IF;
 END $$;
 
