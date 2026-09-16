@@ -20,6 +20,7 @@ import {
   appendInternalNote,
 } from "./routes/tickets.js";
 import { staffTicketsRouter } from "./routes/staffTickets.js";
+import { adminUsersRouter } from "./routes/adminUsers.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -53,6 +54,12 @@ app.use("/api/auth", authRouter);
 // ---------------------------------------------------------------------------
 app.use("/api/v1/staff/tickets", staffTicketsRouter);
 app.use("/api/staff/tickets", staffTicketsRouter);
+
+// ---------------------------------------------------------------------------
+// Administrator User Management (Lab 3 Feature 15)
+// ---------------------------------------------------------------------------
+app.use("/api/v1/admin/users", adminUsersRouter);
+app.use("/api/admin/users", adminUsersRouter);
 
 // ---------------------------------------------------------------------------
 // Category list (Lab 1 backwards compatible + Lab 2 v1 endpoint)

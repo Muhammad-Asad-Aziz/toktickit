@@ -11,27 +11,37 @@ import MyTickets from "./components/MyTickets.js";
 import RequesterTicketDetail from "./components/RequesterTicketDetail.js";
 import StaffTicketQueue from "./components/StaffTicketQueue.js";
 import StaffTicketDetail from "./components/StaffTicketDetail.js";
+import UserManagement from "./components/UserManagement.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 
 interface AppContentProps {
-  initialView?: "create" | "my-tickets" | "detail" | "staff-queue";
+  initialView?: "create" | "my-tickets" | "detail" | "staff-queue" | "user-admin";
   initialTicketId?: number | null;
 }
 
 function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail" | "staff-queue">(
-    initialView || (user && (user.role === "IT_STAFF" || user.role === "ADMINISTRATOR") ? "staff-queue" : "create")
+  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail" | "staff-queue" | "user-admin">(
+    initialView ||
+      (user && user.role === "ADMINISTRATOR"
+        ? "user-admin"
+        : user && user.role === "IT_STAFF"
+        ? "staff-queue"
+        : "create")
   );
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(initialTicketId);
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
 
-  // Default staff and admin users to staff-queue if no explicit initialView
+  // Default staff and admin users to their respective home views if no explicit initialView
   useEffect(() => {
-    if (!initialView && user && (user.role === "IT_STAFF" || user.role === "ADMINISTRATOR")) {
-      setActiveView("staff-queue");
+    if (!initialView && user) {
+      if (user.role === "ADMINISTRATOR") {
+        setActiveView("user-admin");
+      } else if (user.role === "IT_STAFF") {
+        setActiveView("staff-queue");
+      }
     }
   }, [user, initialView]);
 
@@ -46,7 +56,7 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
     }
   }
 
-  const handleHeaderViewChange = (view: "create" | "my-tickets" | "staff-queue") => {
+  const handleHeaderViewChange = (view: "create" | "my-tickets" | "staff-queue" | "user-admin") => {
     setActiveView(view);
     setSelectedTicketId(null);
   };
@@ -109,7 +119,12 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
         className="container py-4 flex-grow-1"
         style={{ maxWidth: activeView === "create" ? 860 : 1320 }}
       >
-        {activeView === "create" ? (
+        {activeView === "user-admin" && user.role === "ADMINISTRATOR" ? (
+          /* Administrator User Management View (Issue 15) */
+          <div className="mb-4">
+            <UserManagement />
+          </div>
+        ) : activeView === "create" ? (
           /* Create Ticket Form View (Feature 7 / Feature 3) */
           <div className="mb-4">
             <CreateTicketForm
