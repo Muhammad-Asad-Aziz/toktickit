@@ -57,6 +57,10 @@ model User {
   assignedTickets    Ticket[]     @relation("StaffOwnedTickets")
   removedAttachments Attachment[] @relation("UserRemovedAttachments")
 
+  // Issue 14 increments
+  publicComments     PublicComment[] @relation("UserPublicComments")
+  internalNotes      InternalNote[]  @relation("UserInternalNotes")
+
   @@map("users")
 }
 
@@ -120,6 +124,10 @@ model Ticket {
   relatedSystem       RelatedSystem @relation(fields: [relatedSystemId], references: [id], onDelete: Restrict)
   attachments         Attachment[]
 
+  // Issue 14 increments
+  publicComments      PublicComment[]
+  internalNotes       InternalNote[]
+
   @@index([requesterId])
   @@index([ownerId])
   @@index([currentStatus])
@@ -162,3 +170,42 @@ model TicketNumberSequence {
 
   @@map("ticket_number_sequences")
 }
+
+// ---------------------------------------------------------------------------
+// 7. Public Comment Model (Shared Bidirectional Thread)
+// ---------------------------------------------------------------------------
+model PublicComment {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  authorId  Int
+  content   String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+
+  // Relational Integrity
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User     @relation("UserPublicComments", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("public_comments")
+}
+
+// ---------------------------------------------------------------------------
+// 8. Internal Note Model (Confidential Staff-Only Thread)
+// ---------------------------------------------------------------------------
+model InternalNote {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  authorId  Int
+  content   String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+
+  // Relational Integrity
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User     @relation("UserInternalNotes", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("internal_notes")
+}
+

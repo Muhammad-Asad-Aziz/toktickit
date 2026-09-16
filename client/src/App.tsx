@@ -10,6 +10,7 @@ import CreateTicketForm from "./components/CreateTicketForm.js";
 import MyTickets from "./components/MyTickets.js";
 import RequesterTicketDetail from "./components/RequesterTicketDetail.js";
 import StaffTicketQueue from "./components/StaffTicketQueue.js";
+import StaffTicketDetail from "./components/StaffTicketDetail.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 
@@ -128,15 +129,25 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
             />
           </div>
         ) : activeView === "detail" && selectedTicketId ? (
-          /* Ticket Detail View (Feature 9 / Feature 5) */
+          /* Ticket Detail View (Issue 14 Staff / Requester) */
           <div className="mb-4">
-            <RequesterTicketDetail
-              ticketId={selectedTicketId}
-              onBack={() => {
-                setActiveView(user.role === "REQUESTER" ? "my-tickets" : "staff-queue");
-                setSelectedTicketId(null);
-              }}
-            />
+            {user.role === "REQUESTER" ? (
+              <RequesterTicketDetail
+                ticketId={selectedTicketId}
+                onBack={() => {
+                  setActiveView("my-tickets");
+                  setSelectedTicketId(null);
+                }}
+              />
+            ) : (
+              <StaffTicketDetail
+                ticketId={selectedTicketId}
+                onBack={() => {
+                  setActiveView("staff-queue");
+                  setSelectedTicketId(null);
+                }}
+              />
+            )}
           </div>
         ) : (
           /* My Tickets View (Feature 8 / Feature 4) */
