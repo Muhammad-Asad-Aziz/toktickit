@@ -5,6 +5,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import { getPrisma } from "../prisma.js";
 import { generateTicketNumber } from "../services/ticketNumberService.js";
+import { Priority, TicketStatus } from "@prisma/client";
 
 // Ensure uploads directory exists regardless of current working directory
 export const UPLOAD_DIR = fs.existsSync(path.resolve(process.cwd(), "src"))
@@ -197,6 +198,38 @@ const PRIORITY_MAP: Record<string, string> = {
   urgent: "Urgent",
 };
 
+export function toPriorityEnum(val: string): Priority {
+  const upper = val.toUpperCase();
+  if (upper in Priority) {
+    return upper as Priority;
+  }
+  return Priority.MEDIUM;
+}
+
+export function formatPriorityTitleCase(val: string): string {
+  const map: Record<string, string> = {
+    LOW: "Low",
+    MEDIUM: "Medium",
+    HIGH: "High",
+    URGENT: "Urgent",
+  };
+  return map[val.toUpperCase()] || val;
+}
+
+export function formatStatusTitleCase(val: string): string {
+  const map: Record<string, string> = {
+    NEW: "New",
+    OPEN: "Open",
+    IN_PROGRESS: "In Progress",
+    WAITING_FOR_REQUESTER: "Waiting for Requester",
+    RESOLVED: "Resolved",
+    CLOSED: "Closed",
+    REOPENED: "Reopened",
+    CANCELLED: "Cancelled",
+  };
+  return map[val.toUpperCase()] || val;
+}
+
 /**
  * POST /api/tickets and POST /api/v1/tickets
  * Handles ticket creation with atomic sequence generation and optional attachment storage.
@@ -329,7 +362,8 @@ export async function createTicket(req: Request, res: Response) {
       // Generate atomic sequential ticket number
       const ticketNumber = await generateTicketNumber(tx);
 
-      // Create Ticket record with initial status "New"
+      // Create Ticket record with initial status "NEW" and default itPriority (BR-07)
+      const dbPriority = toPriorityEnum(rawPriority);
       const ticket = await tx.ticket.create({
         data: {
           ticketNumber,
@@ -338,9 +372,9 @@ export async function createTicket(req: Request, res: Response) {
           relatedSystemId,
           summary,
           description,
-          requestedPriority: normalizedPriority,
-          currentStatus: "New",
-          itPriority: null,
+          requestedPriority: dbPriority,
+          itPriority: dbPriority,
+          currentStatus: TicketStatus.NEW,
         },
       });
 
@@ -370,10 +404,18 @@ export async function createTicket(req: Request, res: Response) {
         relatedSystemId: ticket.relatedSystemId,
         summary: ticket.summary,
         description: ticket.description,
-        requestedPriority: ticket.requestedPriority,
-        itPriority: ticket.itPriority,
-        currentStatus: ticket.currentStatus,
-        status: ticket.currentStatus, // Compatibility alias with api-spec.md
+        requestedPriority: req.originalUrl.includes("/v1/")
+          ? ticket.requestedPriority
+          : formatPriorityTitleCase(ticket.requestedPriority),
+        itPriority: req.originalUrl.includes("/v1/")
+          ? ticket.itPriority
+          : null,
+        currentStatus: req.originalUrl.includes("/v1/")
+          ? ticket.currentStatus
+          : formatStatusTitleCase(ticket.currentStatus),
+        status: req.originalUrl.includes("/v1/")
+          ? ticket.currentStatus
+          : formatStatusTitleCase(ticket.currentStatus), // Compatibility alias with api-spec.md
         createdAt: ticket.createdAt,
         updatedAt: ticket.updatedAt,
         requester: {
@@ -532,7 +574,7 @@ export async function getTickets(req: Request, res: Response) {
     // Requested priority filter
     if (typeof requestedPriority === "string" && requestedPriority.trim().length > 0) {
       whereClause.AND.push({
-        requestedPriority: { equals: requestedPriority.trim(), mode: "insensitive" },
+        requestedPriority: toPriorityEnum(requestedPriority.trim()),
       });
     }
 
@@ -542,16 +584,18 @@ export async function getTickets(req: Request, res: Response) {
         whereClause.AND.push({ itPriority: null });
       } else {
         whereClause.AND.push({
-          itPriority: { equals: itPriority.trim(), mode: "insensitive" },
+          itPriority: toPriorityEnum(itPriority.trim()),
         });
       }
     }
 
     // Status filter
     if (typeof status === "string" && status.trim().length > 0) {
-      whereClause.AND.push({
-        currentStatus: { equals: status.trim(), mode: "insensitive" },
-      });
+      const clean = status.trim().toUpperCase().replace(/ /g, "_");
+      const validStatuses = Object.values(TicketStatus) as string[];
+      if (validStatuses.includes(clean)) {
+        whereClause.AND.push({ currentStatus: clean as TicketStatus });
+      }
     }
 
     // 5. Pagination mathematics & boundary normalization
@@ -615,10 +659,10 @@ export async function getTickets(req: Request, res: Response) {
       ticketNumber: t.ticketNumber,
       ticketNo: t.ticketNumber, // Compatibility alias
       summary: t.summary,
-      requestedPriority: t.requestedPriority,
-      itPriority: t.itPriority,
-      currentStatus: t.currentStatus,
-      status: t.currentStatus, // Compatibility alias
+      requestedPriority: formatPriorityTitleCase(t.requestedPriority),
+      itPriority: t.itPriority ? formatPriorityTitleCase(t.itPriority) : null,
+      currentStatus: formatStatusTitleCase(t.currentStatus),
+      status: formatStatusTitleCase(t.currentStatus), // Compatibility alias
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
       category: {
@@ -754,11 +798,11 @@ export async function getTicketById(req: Request, res: Response) {
       ticketNo: ticket.ticketNumber, // Compatibility alias
       summary: ticket.summary,
       description: ticket.description,
-      requestedPriority: ticket.requestedPriority,
-      itPriority: ticket.itPriority,
-      currentStatus: ticket.currentStatus,
-      status: ticket.currentStatus, // Compatibility alias
-      ticketOwner: null,
+      requestedPriority: formatPriorityTitleCase(ticket.requestedPriority),
+      itPriority: ticket.itPriority ? formatPriorityTitleCase(ticket.itPriority) : null,
+      currentStatus: formatStatusTitleCase(ticket.currentStatus),
+      status: formatStatusTitleCase(ticket.currentStatus), // Compatibility alias
+      ticketOwner: ticket.ownerId ? String(ticket.ownerId) : null,
       createdAt: ticket.createdAt,
       updatedAt: ticket.updatedAt,
       requester: {

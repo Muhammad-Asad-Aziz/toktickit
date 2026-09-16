@@ -21,8 +21,40 @@ export async function generateTicketNumber(
     create: { year, nextVal: 2 },
   });
 
-  const allocatedNumber = sequence.nextVal === 2 ? 1 : sequence.nextVal - 1;
-  const paddedSequence = String(allocatedNumber).padStart(5, "0");
+  let allocatedNumber = sequence.nextVal === 2 ? 1 : sequence.nextVal - 1;
+  let paddedSequence = String(allocatedNumber).padStart(5, "0");
+  let candidate = `TKT-${year}-${paddedSequence}`;
 
-  return `TKT-${year}-${paddedSequence}`;
+  const existing = await tx.ticket.findUnique({
+    where: { ticketNumber: candidate },
+    select: { id: true },
+  });
+
+  if (existing) {
+    const lastTicket = await tx.ticket.findFirst({
+      where: { ticketNumber: { startsWith: `TKT-${year}-` } },
+      orderBy: { ticketNumber: "desc" },
+      select: { ticketNumber: true },
+    });
+
+    let maxNum = allocatedNumber;
+    if (lastTicket) {
+      const parts = lastTicket.ticketNumber.split("-");
+      const lastNum = parseInt(parts[2], 10);
+      if (!isNaN(lastNum) && lastNum >= maxNum) {
+        maxNum = lastNum;
+      }
+    }
+
+    allocatedNumber = maxNum + 1;
+    paddedSequence = String(allocatedNumber).padStart(5, "0");
+    candidate = `TKT-${year}-${paddedSequence}`;
+
+    await tx.ticketNumberSequence.update({
+      where: { year },
+      data: { nextVal: allocatedNumber + 1 },
+    });
+  }
+
+  return candidate;
 }

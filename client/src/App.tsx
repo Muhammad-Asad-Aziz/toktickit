@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as api from "./api.js";
 import { Category } from "./api.js";
 import { AuthProvider, useAuth } from "./context/AuthContext.js";
@@ -9,20 +9,30 @@ import ChangePasswordView from "./components/ChangePasswordView.js";
 import CreateTicketForm from "./components/CreateTicketForm.js";
 import MyTickets from "./components/MyTickets.js";
 import RequesterTicketDetail from "./components/RequesterTicketDetail.js";
+import StaffTicketQueue from "./components/StaffTicketQueue.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 
 interface AppContentProps {
-  initialView?: "create" | "my-tickets" | "detail";
+  initialView?: "create" | "my-tickets" | "detail" | "staff-queue";
   initialTicketId?: number | null;
 }
 
-function AppContent({ initialView = "create", initialTicketId = null }: AppContentProps) {
+function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail">(initialView);
+  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail" | "staff-queue">(
+    initialView || (user && (user.role === "IT_STAFF" || user.role === "ADMINISTRATOR") ? "staff-queue" : "create")
+  );
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(initialTicketId);
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
+
+  // Default staff and admin users to staff-queue if no explicit initialView
+  useEffect(() => {
+    if (!initialView && user && (user.role === "IT_STAFF" || user.role === "ADMINISTRATOR")) {
+      setActiveView("staff-queue");
+    }
+  }, [user, initialView]);
 
   async function handleCheck() {
     setState("loading");
@@ -35,7 +45,7 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
     }
   }
 
-  const handleHeaderViewChange = (view: "create" | "my-tickets") => {
+  const handleHeaderViewChange = (view: "create" | "my-tickets" | "staff-queue") => {
     setActiveView(view);
     setSelectedTicketId(null);
   };
@@ -84,7 +94,13 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
   return (
     <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
       <AppHeader
-        activeView={activeView === "detail" ? "my-tickets" : activeView}
+        activeView={
+          activeView === "detail"
+            ? user.role === "REQUESTER"
+              ? "my-tickets"
+              : "staff-queue"
+            : activeView
+        }
         onViewChange={handleHeaderViewChange}
       />
 
@@ -95,7 +111,21 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
         {activeView === "create" ? (
           /* Create Ticket Form View (Feature 7 / Feature 3) */
           <div className="mb-4">
-            <CreateTicketForm onViewTickets={() => setActiveView("my-tickets")} />
+            <CreateTicketForm
+              onViewTickets={() =>
+                setActiveView(user.role === "REQUESTER" ? "my-tickets" : "staff-queue")
+              }
+            />
+          </div>
+        ) : activeView === "staff-queue" ? (
+          /* IT Staff Ticket Queue View (Issue 13 / Feature 3) */
+          <div className="mb-4">
+            <StaffTicketQueue
+              onViewTicket={(ticketId) => {
+                setSelectedTicketId(ticketId);
+                setActiveView("detail");
+              }}
+            />
           </div>
         ) : activeView === "detail" && selectedTicketId ? (
           /* Ticket Detail View (Feature 9 / Feature 5) */
@@ -103,7 +133,7 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
             <RequesterTicketDetail
               ticketId={selectedTicketId}
               onBack={() => {
-                setActiveView("my-tickets");
+                setActiveView(user.role === "REQUESTER" ? "my-tickets" : "staff-queue");
                 setSelectedTicketId(null);
               }}
             />
