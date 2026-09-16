@@ -125,7 +125,7 @@ describe("Feature 9 / Issue 5: Attachment Lifecycle & Soft-Removal API Tests", (
         relatedSystemId: 1,
         summary: "Ceiling test ticket",
         description: "Dedicated ticket to test 5 active attachments ceiling.",
-        requestedPriority: "Low",
+        requestedPriority: "Low" as any,
       },
     });
 
@@ -166,7 +166,7 @@ describe("Feature 9 / Issue 5: Attachment Lifecycle & Soft-Removal API Tests", (
         relatedSystemId: 1,
         summary: "Tombstone reclamation test ticket",
         description: "Testing that soft-removed attachments do not count toward the active limit.",
-        requestedPriority: "Low",
+        requestedPriority: "Low" as any,
       },
     });
 

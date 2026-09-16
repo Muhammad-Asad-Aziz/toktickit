@@ -86,9 +86,9 @@ describe("Feature 8 / Feature 4: My Tickets API Tests", () => {
         relatedSystemId: systemWifiId,
         summary: "Cannot connect to campus Wi-Fi in building SCL",
         description: "Wi-Fi authentication keeps failing on 3rd floor.",
-        requestedPriority: "High",
-        itPriority: "Medium",
-        currentStatus: "New",
+        requestedPriority: "High" as any,
+        itPriority: "Medium" as any,
+        currentStatus: "New" as any,
         createdAt: new Date("2026-09-01T10:00:00Z"),
       },
     });
@@ -135,9 +135,9 @@ describe("Feature 8 / Feature 4: My Tickets API Tests", () => {
         relatedSystemId: systemWifiId,
         summary: "Department shared printer offline",
         description: "Paper jam error code 502.",
-        requestedPriority: "Low",
+        requestedPriority: "Low" as any,
         itPriority: null, // UNASSIGNED
-        currentStatus: "Assigned",
+        currentStatus: "Assigned" as any,
         createdAt: new Date("2026-09-02T10:00:00Z"),
       },
     });
@@ -151,9 +151,9 @@ describe("Feature 8 / Feature 4: My Tickets API Tests", () => {
         relatedSystemId: systemWifiId,
         summary: "VPN portal login loop",
         description: "Cannot access internal grading portal from home.",
-        requestedPriority: "Urgent",
+        requestedPriority: "Urgent" as any,
         itPriority: null, // UNASSIGNED
-        currentStatus: "New",
+        currentStatus: "New" as any,
         createdAt: new Date("2026-09-03T10:00:00Z"),
       },
     });
@@ -167,9 +167,9 @@ describe("Feature 8 / Feature 4: My Tickets API Tests", () => {
         relatedSystemId: systemWifiId,
         summary: "Requester 2 secret ticket Wi-Fi issue",
         description: "Belongs to Requester 2 only.",
-        requestedPriority: "High",
-        itPriority: "High",
-        currentStatus: "New",
+        requestedPriority: "High" as any,
+        itPriority: "High" as any,
+        currentStatus: "New" as any,
         createdAt: new Date("2026-09-04T10:00:00Z"),
       },
     });
@@ -181,9 +181,9 @@ describe("Feature 8 / Feature 4: My Tickets API Tests", () => {
         relatedSystemId: systemWifiId,
         summary: "Requester 2 laptop screen flicker",
         description: "Hardware defect on university laptop.",
-        requestedPriority: "Medium",
+        requestedPriority: "Medium" as any,
         itPriority: null,
-        currentStatus: "In Progress",
+        currentStatus: "In Progress" as any,
         createdAt: new Date("2026-09-05T10:00:00Z"),
       },
     });

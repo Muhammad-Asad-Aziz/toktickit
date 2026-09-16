@@ -518,4 +518,94 @@ export async function changePassword(payload: ChangePasswordPayload): Promise<Au
   return data;
 }
 
+export interface StaffTicketSummary {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  categoryName: string;
+  categoryId: number;
+  requestedPriority: string;
+  itPriority: string;
+  currentStatus: string;
+  requesterName: string;
+  requesterId: number;
+  ownerName: string | null;
+  ownerId: number | null;
+  requesterResolved: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
+export interface StaffTicketQueryParams {
+  search?: string;
+  status?: string;
+  category?: string | number;
+  itPriority?: string;
+  owner?: string | number;
+  sortBy?: "createdAt" | "ticketNumber" | "summary" | "itPriority" | "currentStatus";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+export interface StaffTicketQueueResponse {
+  items: StaffTicketSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function fetchStaffTickets(
+  params: StaffTicketQueryParams = {},
+  signal?: AbortSignal
+): Promise<StaffTicketQueueResponse> {
+  const query = new URLSearchParams();
+
+  if (params.search !== undefined && params.search.trim() !== "") {
+    query.set("search", params.search.trim());
+  }
+  if (params.status !== undefined && params.status !== "") {
+    query.set("status", params.status);
+  }
+  if (params.category !== undefined && params.category !== "") {
+    query.set("category", String(params.category));
+  }
+  if (params.itPriority !== undefined && params.itPriority !== "") {
+    query.set("itPriority", params.itPriority);
+  }
+  if (params.owner !== undefined && params.owner !== "") {
+    query.set("owner", String(params.owner));
+  }
+  if (params.sortBy) {
+    query.set("sortBy", params.sortBy);
+  }
+  if (params.sortOrder) {
+    query.set("sortOrder", params.sortOrder);
+  }
+  if (params.page !== undefined) {
+    query.set("page", String(params.page));
+  }
+  if (params.pageSize !== undefined) {
+    query.set("pageSize", String(params.pageSize));
+  }
+
+  const queryString = query.toString();
+  const url = `${API_URL}/api/v1/staff/tickets${queryString ? `?${queryString}` : ""}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+    credentials: "include",
+    signal,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error?.message || "Failed to fetch staff tickets");
+  }
+
+  return data;
+}

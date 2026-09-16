@@ -16,6 +16,7 @@ import {
   handleUploadMiddleware,
   handleSingleUploadMiddleware,
 } from "./routes/tickets.js";
+import { staffTicketsRouter } from "./routes/staffTickets.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -43,6 +44,12 @@ app.get("/api/health", (_req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 app.use("/api/v1/auth", authRouter);
 app.use("/api/auth", authRouter);
+
+// ---------------------------------------------------------------------------
+// Staff Ticket Queue (Lab 3 Feature 13)
+// ---------------------------------------------------------------------------
+app.use("/api/v1/staff/tickets", staffTicketsRouter);
+app.use("/api/staff/tickets", staffTicketsRouter);
 
 // ---------------------------------------------------------------------------
 // Category list (Lab 1 backwards compatible + Lab 2 v1 endpoint)

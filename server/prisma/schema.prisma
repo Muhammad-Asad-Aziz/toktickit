@@ -19,6 +19,24 @@ enum Role {
   ADMINISTRATOR
 }
 
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  NEW
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_REQUESTER
+  RESOLVED
+  CLOSED
+  REOPENED
+  CANCELLED
+}
+
 // ---------------------------------------------------------------------------
 // 1. User Model (Unified Authenticated Identity)
 // ---------------------------------------------------------------------------
@@ -36,6 +54,7 @@ model User {
 
   // Relational Integrity
   submittedTickets   Ticket[]     @relation("RequesterTickets")
+  assignedTickets    Ticket[]     @relation("StaffOwnedTickets")
   removedAttachments Attachment[] @relation("UserRemovedAttachments")
 
   @@map("users")
@@ -79,28 +98,33 @@ model Category {
 // 4. Ticket (Service Desk Incident / Request)
 // ---------------------------------------------------------------------------
 model Ticket {
-  id                Int           @id @default(autoincrement())
-  ticketNumber      String        @unique @db.VarChar(32) // Format: TKT-YYYY-NNNNN
-  requesterId       Int
-  categoryId        Int
-  relatedSystemId   Int
-  summary           String        @db.VarChar(100)
-  description       String        @db.Text
-  requestedPriority String        // Low, Medium, High, Urgent
-  itPriority        String?       // Low, Medium, High, Urgent
-  currentStatus     String        @default("New") // New, Assigned, In Progress, Pending Requester, Resolved, Closed, Cancelled
+  id                  Int           @id @default(autoincrement())
+  ticketNumber        String        @unique @db.VarChar(32) // Format: TKT-YYYY-NNNNN
+  requesterId         Int
+  ownerId             Int?
+  categoryId          Int
+  relatedSystemId     Int
+  summary             String        @db.VarChar(100)
+  description         String        @db.Text
+  requestedPriority   Priority      @default(MEDIUM)
+  itPriority          Priority?     @default(MEDIUM)
+  currentStatus       TicketStatus  @default(NEW)
   requesterResolvedAt DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   // Relations (Repointed to User model)
-  requester         User          @relation("RequesterTickets", fields: [requesterId], references: [id], onDelete: Restrict)
-  category          Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  relatedSystem     RelatedSystem @relation(fields: [relatedSystemId], references: [id], onDelete: Restrict)
-  attachments       Attachment[]
+  requester           User          @relation("RequesterTickets", fields: [requesterId], references: [id], onDelete: Restrict)
+  owner               User?         @relation("StaffOwnedTickets", fields: [ownerId], references: [id], onDelete: SetNull)
+  category            Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  relatedSystem       RelatedSystem @relation(fields: [relatedSystemId], references: [id], onDelete: Restrict)
+  attachments         Attachment[]
 
   @@index([requesterId])
+  @@index([ownerId])
   @@index([currentStatus])
+  @@index([itPriority])
+  @@index([createdAt])
   @@map("tickets")
 }
 
