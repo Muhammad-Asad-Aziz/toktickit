@@ -74,19 +74,24 @@ describe("Staff Ticket Detail Operational Controls API Suite (Issue 14)", () => 
       testTicketId = created.id;
     }
 
-    // Create a closed ticket for terminal state testing
-    const closed = await prisma.ticket.create({
-      data: {
-        ticketNumber: "TKT-2026-99002",
-        requesterId,
-        categoryId: 1,
-        relatedSystemId: 1,
-        summary: "Terminal test ticket",
-        description: "Testing terminal states",
-        requestedPriority: "LOW",
-        currentStatus: "CLOSED",
-      },
+    // Create or find a closed ticket for terminal state testing
+    let closed = await prisma.ticket.findUnique({
+      where: { ticketNumber: "TKT-2026-99002" },
     });
+    if (!closed) {
+      closed = await prisma.ticket.create({
+        data: {
+          ticketNumber: "TKT-2026-99002",
+          requesterId,
+          categoryId: 1,
+          relatedSystemId: 1,
+          summary: "Terminal test ticket",
+          description: "Testing terminal states",
+          requestedPriority: "LOW",
+          currentStatus: "CLOSED",
+        },
+      });
+    }
     closedTicketId = closed.id;
   });
 
