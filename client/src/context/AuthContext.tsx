@@ -28,7 +28,7 @@ export interface AuthContextType {
   refreshSession: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   // Initialize user from cached session/requester storage to prevent flashes & support tests
@@ -86,6 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         // ignore
       }
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("toktickit_requester_changed"));
     }
   };
 

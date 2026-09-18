@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import bcrypt from "bcryptjs";
 import { getPrisma } from "../src/prisma.js";
 
@@ -475,6 +477,59 @@ export async function seed(prismaClient = getPrisma()) {
           },
         ],
       });
+    }
+  }
+
+  // 6. Seed Attachments for Lab 2 Continuity Verification
+  const ticket2 = await prismaClient.ticket.findUnique({
+    where: { ticketNumber: "TKT-2026-00002" },
+  });
+
+  const isServerCwd = path.basename(process.cwd()) === "server";
+  const uploadDirRoot = isServerCwd ? path.resolve(process.cwd(), "..", "uploads") : path.resolve(process.cwd(), "uploads");
+  const uploadDirServer = isServerCwd ? path.resolve(process.cwd(), "uploads") : path.resolve(process.cwd(), "server", "uploads");
+  fs.mkdirSync(uploadDirRoot, { recursive: true });
+  fs.mkdirSync(uploadDirServer, { recursive: true });
+
+  if (ticket1) {
+    const attCount1 = await prismaClient.attachment.count({
+      where: { ticketId: ticket1.id },
+    });
+    if (attCount1 === 0) {
+      await prismaClient.attachment.create({
+        data: {
+          ticketId: ticket1.id,
+          originalFilename: "wifi-signal-analysis.pdf",
+          storedFilename: "seed-wifi-signal-analysis.pdf",
+          mimeType: "application/pdf",
+          fileSize: 245760,
+          isRemoved: false,
+          createdAt: new Date("2026-09-03T10:30:00.000Z"),
+        },
+      });
+      fs.writeFileSync(path.join(uploadDirRoot, "seed-wifi-signal-analysis.pdf"), "%PDF-1.4 Mock Wi-Fi Signal Analysis Data");
+      fs.writeFileSync(path.join(uploadDirServer, "seed-wifi-signal-analysis.pdf"), "%PDF-1.4 Mock Wi-Fi Signal Analysis Data");
+    }
+  }
+
+  if (ticket2) {
+    const attCount2 = await prismaClient.attachment.count({
+      where: { ticketId: ticket2.id },
+    });
+    if (attCount2 === 0) {
+      await prismaClient.attachment.create({
+        data: {
+          ticketId: ticket2.id,
+          originalFilename: "projector-error-log.png",
+          storedFilename: "seed-projector-error-log.png",
+          mimeType: "image/png",
+          fileSize: 153600,
+          isRemoved: false,
+          createdAt: new Date("2026-09-03T10:45:00.000Z"),
+        },
+      });
+      fs.writeFileSync(path.join(uploadDirRoot, "seed-projector-error-log.png"), "Mock PNG error log content");
+      fs.writeFileSync(path.join(uploadDirServer, "seed-projector-error-log.png"), "Mock PNG error log content");
     }
   }
 }
