@@ -5,6 +5,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import { getPrisma } from "../prisma.js";
 import { generateTicketNumber } from "../services/ticketNumberService.js";
+import { Priority, TicketStatus } from "@prisma/client";
 
 // Ensure uploads directory exists regardless of current working directory
 export const UPLOAD_DIR = fs.existsSync(path.resolve(process.cwd(), "src"))
@@ -197,6 +198,38 @@ const PRIORITY_MAP: Record<string, string> = {
   urgent: "Urgent",
 };
 
+export function toPriorityEnum(val: string): Priority {
+  const upper = val.toUpperCase();
+  if (upper in Priority) {
+    return upper as Priority;
+  }
+  return Priority.MEDIUM;
+}
+
+export function formatPriorityTitleCase(val: string): string {
+  const map: Record<string, string> = {
+    LOW: "Low",
+    MEDIUM: "Medium",
+    HIGH: "High",
+    URGENT: "Urgent",
+  };
+  return map[val.toUpperCase()] || val;
+}
+
+export function formatStatusTitleCase(val: string): string {
+  const map: Record<string, string> = {
+    NEW: "New",
+    OPEN: "Open",
+    IN_PROGRESS: "In Progress",
+    WAITING_FOR_REQUESTER: "Waiting for Requester",
+    RESOLVED: "Resolved",
+    CLOSED: "Closed",
+    REOPENED: "Reopened",
+    CANCELLED: "Cancelled",
+  };
+  return map[val.toUpperCase()] || val;
+}
+
 /**
  * POST /api/tickets and POST /api/v1/tickets
  * Handles ticket creation with atomic sequence generation and optional attachment storage.
@@ -219,7 +252,7 @@ export async function createTicket(req: Request, res: Response) {
   // 2. Validate field inputs
   const fieldErrors: FieldError[] = [];
 
-  const rawRequesterId = req.body.requesterId ?? req.headers["x-requester-id"];
+  const rawRequesterId = req.user ? req.user.id : (req.body.requesterId ?? req.headers["x-requester-id"]);
   const requesterId = Number(rawRequesterId);
   if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
     fieldErrors.push({
@@ -303,7 +336,7 @@ export async function createTicket(req: Request, res: Response) {
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Verify requester exists and is active (BR-09)
-      const requester = await tx.requesterUser.findUnique({
+      const requester = await tx.user.findUnique({
         where: { id: requesterId },
       });
       if (!requester || !requester.isActive) {
@@ -329,7 +362,8 @@ export async function createTicket(req: Request, res: Response) {
       // Generate atomic sequential ticket number
       const ticketNumber = await generateTicketNumber(tx);
 
-      // Create Ticket record with initial status "New"
+      // Create Ticket record with initial status "NEW" and default itPriority (BR-07)
+      const dbPriority = toPriorityEnum(rawPriority);
       const ticket = await tx.ticket.create({
         data: {
           ticketNumber,
@@ -338,9 +372,9 @@ export async function createTicket(req: Request, res: Response) {
           relatedSystemId,
           summary,
           description,
-          requestedPriority: normalizedPriority,
-          currentStatus: "New",
-          itPriority: null,
+          requestedPriority: dbPriority,
+          itPriority: dbPriority,
+          currentStatus: TicketStatus.NEW,
         },
       });
 
@@ -370,10 +404,18 @@ export async function createTicket(req: Request, res: Response) {
         relatedSystemId: ticket.relatedSystemId,
         summary: ticket.summary,
         description: ticket.description,
-        requestedPriority: ticket.requestedPriority,
-        itPriority: ticket.itPriority,
-        currentStatus: ticket.currentStatus,
-        status: ticket.currentStatus, // Compatibility alias with api-spec.md
+        requestedPriority: req.originalUrl.includes("/v1/")
+          ? ticket.requestedPriority
+          : formatPriorityTitleCase(ticket.requestedPriority),
+        itPriority: req.originalUrl.includes("/v1/")
+          ? ticket.itPriority
+          : null,
+        currentStatus: req.originalUrl.includes("/v1/")
+          ? ticket.currentStatus
+          : formatStatusTitleCase(ticket.currentStatus),
+        status: req.originalUrl.includes("/v1/")
+          ? ticket.currentStatus
+          : formatStatusTitleCase(ticket.currentStatus), // Compatibility alias with api-spec.md
         createdAt: ticket.createdAt,
         updatedAt: ticket.updatedAt,
         requester: {
@@ -454,8 +496,8 @@ export async function createTicket(req: Request, res: Response) {
  */
 export async function getTickets(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     // 1. Mandatory header check (strict requester isolation)
     // Any incoming req.query.requesterId is strictly ignored
@@ -471,7 +513,7 @@ export async function getTickets(req: Request, res: Response) {
 
     // 2. Verify active requester
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 
@@ -532,7 +574,7 @@ export async function getTickets(req: Request, res: Response) {
     // Requested priority filter
     if (typeof requestedPriority === "string" && requestedPriority.trim().length > 0) {
       whereClause.AND.push({
-        requestedPriority: { equals: requestedPriority.trim(), mode: "insensitive" },
+        requestedPriority: toPriorityEnum(requestedPriority.trim()),
       });
     }
 
@@ -542,16 +584,18 @@ export async function getTickets(req: Request, res: Response) {
         whereClause.AND.push({ itPriority: null });
       } else {
         whereClause.AND.push({
-          itPriority: { equals: itPriority.trim(), mode: "insensitive" },
+          itPriority: toPriorityEnum(itPriority.trim()),
         });
       }
     }
 
     // Status filter
     if (typeof status === "string" && status.trim().length > 0) {
-      whereClause.AND.push({
-        currentStatus: { equals: status.trim(), mode: "insensitive" },
-      });
+      const clean = status.trim().toUpperCase().replace(/ /g, "_");
+      const validStatuses = Object.values(TicketStatus) as string[];
+      if (validStatuses.includes(clean)) {
+        whereClause.AND.push({ currentStatus: clean as TicketStatus });
+      }
     }
 
     // 5. Pagination mathematics & boundary normalization
@@ -615,10 +659,10 @@ export async function getTickets(req: Request, res: Response) {
       ticketNumber: t.ticketNumber,
       ticketNo: t.ticketNumber, // Compatibility alias
       summary: t.summary,
-      requestedPriority: t.requestedPriority,
-      itPriority: t.itPriority,
-      currentStatus: t.currentStatus,
-      status: t.currentStatus, // Compatibility alias
+      requestedPriority: formatPriorityTitleCase(t.requestedPriority),
+      itPriority: t.itPriority ? formatPriorityTitleCase(t.itPriority) : null,
+      currentStatus: formatStatusTitleCase(t.currentStatus),
+      status: formatStatusTitleCase(t.currentStatus), // Compatibility alias
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
       category: {
@@ -654,14 +698,19 @@ export async function getTickets(req: Request, res: Response) {
 
 /**
  * GET /api/tickets/:id & GET /api/v1/tickets/:id
- * Retrieve detailed read-only ticket information for an owned ticket.
+ * Retrieve detailed ticket information.
+ * IT Staff / Admin: can view all tickets, includes public comments and internal notes.
+ * Requester: can view only owned tickets, includes public comments, strictly omits internal notes (BR-04).
  */
 export async function getTicketById(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const isStaffOrAdmin = req.user && (req.user.role === "IT_STAFF" || req.user.role === "ADMINISTRATOR");
 
-    if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
+    // Fallback to x-requester-id for unauthenticated development compatibility if no session
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
+
+    if (!isStaffOrAdmin && !rawRequesterId) {
       return res.status(400).json({
         error: {
           code: "MISSING_REQUESTER_ID",
@@ -671,17 +720,11 @@ export async function getTicketById(req: Request, res: Response) {
       });
     }
 
-    const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
-      where: { id: requesterId },
-    });
-
-    if (!requester || !requester.isActive) {
+    if (!isStaffOrAdmin && (isNaN(requesterId) || requesterId <= 0)) {
       return res.status(400).json({
         error: {
           code: "VALIDATION_FAILED",
-          message: "The specified development requester is inactive or does not exist.",
-          fieldErrors: [{ field: "requesterId", message: "Requester must be an active development user." }],
+          message: "A valid requester ID must be provided.",
           timestamp: new Date().toISOString(),
         },
       });
@@ -698,11 +741,15 @@ export async function getTicketById(req: Request, res: Response) {
       });
     }
 
+    const prisma = getPrisma();
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
         requester: {
           select: { id: true, name: true, email: true, department: true },
+        },
+        owner: {
+          select: { id: true, name: true, email: true },
         },
         category: {
           select: { id: true, code: true, name: true },
@@ -724,6 +771,26 @@ export async function getTicketById(req: Request, res: Response) {
             createdAt: true,
           },
         },
+        publicComments: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            author: {
+              select: { id: true, name: true, role: true },
+            },
+          },
+        },
+        ...(isStaffOrAdmin
+          ? {
+              internalNotes: {
+                orderBy: { createdAt: "asc" },
+                include: {
+                  author: {
+                    select: { id: true, name: true, role: true },
+                  },
+                },
+              },
+            }
+          : {}),
       },
     });
 
@@ -737,34 +804,29 @@ export async function getTicketById(req: Request, res: Response) {
       });
     }
 
-    // Security Check: Cross-requester rejection
-    if (ticket.requesterId !== requesterId) {
+    // Security Check: Requester cannot view another requester's ticket
+    if (!isStaffOrAdmin && ticket.requesterId !== requesterId) {
       return res.status(403).json({
         error: {
-          code: "FORBIDDEN_TICKET_ACCESS",
+          code: "FORBIDDEN",
           message: "You do not have permission to view this ticket.",
           timestamp: new Date().toISOString(),
         },
       });
     }
 
-    return res.status(200).json({
+    const ticketDTO: any = {
       id: ticket.id,
       ticketNumber: ticket.ticketNumber,
-      ticketNo: ticket.ticketNumber, // Compatibility alias
       summary: ticket.summary,
       description: ticket.description,
       requestedPriority: ticket.requestedPriority,
-      itPriority: ticket.itPriority,
+      itPriority: ticket.itPriority || ticket.requestedPriority || "MEDIUM",
       currentStatus: ticket.currentStatus,
-      status: ticket.currentStatus, // Compatibility alias
-      ticketOwner: null,
-      createdAt: ticket.createdAt,
-      updatedAt: ticket.updatedAt,
+      owner: ticket.owner ? { id: ticket.owner.id, name: ticket.owner.name, email: ticket.owner.email } : null,
       requester: {
         id: ticket.requester.id,
         name: ticket.requester.name,
-        displayName: ticket.requester.name, // Compatibility alias
         email: ticket.requester.email,
         department: ticket.requester.department,
       },
@@ -782,21 +844,376 @@ export async function getTicketById(req: Request, res: Response) {
         originalFilename: a.originalFilename,
         mimeType: a.mimeType,
         fileSize: a.fileSize,
-        sizeBytes: a.fileSize, // Compatibility alias
-        isRemoved: a.isRemoved,
-        isDeleted: a.isRemoved, // Compatibility alias
-        removalReason: a.removalReason,
-        removedAt: a.removedAt,
-        removedByRequesterId: a.removedByRequesterId,
-        createdAt: a.createdAt,
-        uploadedAt: a.createdAt, // Compatibility alias
+        createdAt: a.createdAt.toISOString(),
       })),
+      publicComments: ((ticket as any).publicComments || []).map((c: any) => ({
+        id: c.id,
+        ticketId: c.ticketId,
+        content: c.content,
+        author: {
+          id: c.author.id,
+          name: c.author.name,
+          role: c.author.role,
+        },
+        createdAt: c.createdAt.toISOString(),
+      })),
+      requesterResolvedAt: ticket.requesterResolvedAt ? ticket.requesterResolvedAt.toISOString() : null,
+      createdAt: ticket.createdAt.toISOString(),
+      updatedAt: ticket.updatedAt.toISOString(),
+    };
+
+    if (isStaffOrAdmin && (ticket as any).internalNotes) {
+      ticketDTO.internalNotes = ((ticket as any).internalNotes || []).map((n: any) => ({
+        id: n.id,
+        ticketId: n.ticketId,
+        content: n.content,
+        author: {
+          id: n.author.id,
+          name: n.author.name,
+          role: n.author.role,
+        },
+        createdAt: n.createdAt.toISOString(),
+      }));
+    }
+
+    return res.status(200).json({
+      ticket: ticketDTO,
+      // Root-level compatibility properties for Lab 2
+      id: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      ticketNo: ticket.ticketNumber,
+      summary: ticket.summary,
+      description: ticket.description,
+      requestedPriority: formatPriorityTitleCase(ticket.requestedPriority),
+      itPriority: ticket.itPriority ? formatPriorityTitleCase(ticket.itPriority) : null,
+      currentStatus: formatStatusTitleCase(ticket.currentStatus),
+      status: formatStatusTitleCase(ticket.currentStatus),
+      ticketOwner: ticket.owner ? ticket.owner.name : null,
+      owner: ticket.owner ? { id: ticket.owner.id, name: ticket.owner.name, email: ticket.owner.email } : null,
+      requesterResolvedAt: ticket.requesterResolvedAt ? ticket.requesterResolvedAt.toISOString() : null,
+      createdAt: ticket.createdAt.toISOString(),
+      updatedAt: ticket.updatedAt.toISOString(),
+      requester: {
+        id: ticket.requester.id,
+        name: ticket.requester.name,
+        displayName: ticket.requester.name,
+        email: ticket.requester.email,
+        department: ticket.requester.department,
+      },
+      category: {
+        id: ticket.category.id,
+        code: ticket.category.code,
+        name: ticket.category.name,
+      },
+      relatedSystem: {
+        id: ticket.relatedSystem.id,
+        name: ticket.relatedSystem.name,
+      },
+      attachments: ticket.attachments.map((a) => ({
+        id: a.id,
+        originalFilename: a.originalFilename,
+        mimeType: a.mimeType,
+        fileSize: a.fileSize,
+        sizeBytes: a.fileSize,
+        isRemoved: a.isRemoved,
+        isDeleted: a.isRemoved,
+        removalReason: a.removalReason,
+        removedAt: a.removedAt ? a.removedAt.toISOString() : null,
+        removedByRequesterId: a.removedByRequesterId,
+        createdAt: a.createdAt.toISOString(),
+        uploadedAt: a.createdAt.toISOString(),
+      })),
+      publicComments: ticketDTO.publicComments,
+      ...(isStaffOrAdmin ? { internalNotes: ticketDTO.internalNotes } : {}),
     });
-  } catch {
+  } catch (error) {
+    console.error("Failed to retrieve ticket detail:", error);
     return res.status(500).json({
       error: {
         code: "INTERNAL_SERVER_ERROR",
         message: "An unexpected error occurred while retrieving the ticket.",
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+}
+
+/**
+ * POST /api/v1/tickets/:id/resolve-request
+ * Requester action indicating "Problem Appears Resolved" (BR-05).
+ */
+export async function indicateProblemResolved(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: {
+          code: "UNAUTHENTICATED",
+          message: "Authentication required.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const ticketId = parseInt(req.params.id, 10);
+    if (isNaN(ticketId) || ticketId <= 0) {
+      return res.status(404).json({
+        error: {
+          code: "TICKET_NOT_FOUND",
+          message: "Ticket not found.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const prisma = getPrisma();
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({
+        error: {
+          code: "TICKET_NOT_FOUND",
+          message: "Ticket not found.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // Ownership check: only ticket owner can indicate resolution
+    if (ticket.requesterId !== req.user.id) {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "You do not have permission to perform this action.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // Cannot resolve closed or cancelled tickets
+    if (ticket.currentStatus === TicketStatus.CLOSED || ticket.currentStatus === TicketStatus.CANCELLED) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_ACTION",
+          message: "Cannot mark a closed or cancelled ticket as resolved.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const now = new Date();
+    await prisma.ticket.update({
+      where: { id: ticketId },
+      data: { requesterResolvedAt: now },
+    });
+
+    return res.status(200).json({
+      message: "Problem resolution recorded.",
+      requesterResolvedAt: now.toISOString(),
+    });
+  } catch (error) {
+    console.error("Failed to record problem resolution:", error);
+    return res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to record problem resolution.",
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+}
+
+/**
+ * POST /api/v1/tickets/:id/comments
+ * Append a public comment to the ticket thread.
+ */
+export async function appendPublicComment(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: {
+          code: "UNAUTHENTICATED",
+          message: "Authentication required.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const ticketId = parseInt(req.params.id, 10);
+    if (isNaN(ticketId) || ticketId <= 0) {
+      return res.status(404).json({
+        error: {
+          code: "TICKET_NOT_FOUND",
+          message: "Ticket not found.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const prisma = getPrisma();
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({
+        error: {
+          code: "TICKET_NOT_FOUND",
+          message: "Ticket not found.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // Role access check: Requester must own ticket; Staff/Admin can comment on any ticket
+    const isStaffOrAdmin = req.user.role === "IT_STAFF" || req.user.role === "ADMINISTRATOR";
+    if (!isStaffOrAdmin && ticket.requesterId !== req.user.id) {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "You do not have permission to comment on this ticket.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const rawContent = typeof req.body.content === "string" ? req.body.content.trim() : "";
+    if (!rawContent || rawContent.length === 0 || rawContent.length > 2000) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_FAILED",
+          message: "Comment content must be between 1 and 2,000 characters after trimming.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const comment = await prisma.publicComment.create({
+      data: {
+        ticketId,
+        authorId: req.user.id,
+        content: rawContent,
+      },
+      include: {
+        author: {
+          select: { id: true, name: true, role: true },
+        },
+      },
+    });
+
+    return res.status(201).json({
+      comment: {
+        id: comment.id,
+        ticketId: comment.ticketId,
+        content: comment.content,
+        author: {
+          id: comment.author.id,
+          name: comment.author.name,
+          role: comment.author.role,
+        },
+        createdAt: comment.createdAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("Failed to append public comment:", error);
+    return res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to append public comment.",
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+}
+
+/**
+ * POST /api/v1/tickets/:id/notes
+ * Append an internal note to the ticket (IT Staff & Admin only per BR-04).
+ */
+export async function appendInternalNote(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: {
+          code: "UNAUTHENTICATED",
+          message: "Authentication required.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    // Strict Role check: Only IT Staff and Administrator
+    if (req.user.role !== "IT_STAFF" && req.user.role !== "ADMINISTRATOR") {
+      return res.status(403).json({
+        error: {
+          code: "FORBIDDEN",
+          message: "You do not have permission to post internal notes.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const ticketId = parseInt(req.params.id, 10);
+    if (isNaN(ticketId) || ticketId <= 0) {
+      return res.status(404).json({
+        error: {
+          code: "TICKET_NOT_FOUND",
+          message: "Ticket not found.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const prisma = getPrisma();
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      return res.status(404).json({
+        error: {
+          code: "TICKET_NOT_FOUND",
+          message: "Ticket not found.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const rawContent = typeof req.body.content === "string" ? req.body.content.trim() : "";
+    if (!rawContent || rawContent.length === 0 || rawContent.length > 2000) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_FAILED",
+          message: "Note content must be between 1 and 2,000 characters after trimming.",
+          timestamp: new Date().toISOString(),
+        },
+      });
+    }
+
+    const note = await prisma.internalNote.create({
+      data: {
+        ticketId,
+        authorId: req.user.id,
+        content: rawContent,
+      },
+      include: {
+        author: {
+          select: { id: true, name: true, role: true },
+        },
+      },
+    });
+
+    return res.status(201).json({
+      note: {
+        id: note.id,
+        ticketId: note.ticketId,
+        content: note.content,
+        author: {
+          id: note.author.id,
+          name: note.author.name,
+          role: note.author.role,
+        },
+        createdAt: note.createdAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("Failed to append internal note:", error);
+    return res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to append internal note.",
         timestamp: new Date().toISOString(),
       },
     });
@@ -811,8 +1228,8 @@ export async function uploadAttachment(req: Request, res: Response) {
   const file = req.file;
 
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
       if (file?.path && fs.existsSync(file.path)) {
@@ -828,7 +1245,7 @@ export async function uploadAttachment(req: Request, res: Response) {
     }
 
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 
@@ -978,8 +1395,8 @@ export async function uploadAttachment(req: Request, res: Response) {
  */
 export async function downloadAttachment(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
       return res.status(400).json({
@@ -992,7 +1409,7 @@ export async function downloadAttachment(req: Request, res: Response) {
     }
 
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 
@@ -1091,8 +1508,8 @@ export async function downloadAttachment(req: Request, res: Response) {
  */
 export async function removeAttachment(req: Request, res: Response) {
   try {
-    const rawRequesterId = req.headers["x-requester-id"];
-    const requesterId = parseInt(rawRequesterId as string, 10);
+    const rawRequesterId = req.user ? req.user.id : req.headers["x-requester-id"];
+    const requesterId = parseInt(String(rawRequesterId), 10);
 
     if (!rawRequesterId || isNaN(requesterId) || requesterId <= 0) {
       return res.status(400).json({
@@ -1105,7 +1522,7 @@ export async function removeAttachment(req: Request, res: Response) {
     }
 
     const prisma = getPrisma();
-    const requester = await prisma.requesterUser.findUnique({
+    const requester = await prisma.user.findUnique({
       where: { id: requesterId },
     });
 

@@ -4,7 +4,20 @@ import userEvent from "@testing-library/user-event";
 import * as api from "../../src/api.js";
 import App from "../../src/App.js";
 
+const mockDefaultUser = {
+  id: 1,
+  name: "Sompong IT",
+  email: "sompong.it@kmutt.ac.th",
+  role: "REQUESTER",
+  mustChangePassword: false,
+  isActive: true,
+};
+
 describe("App", () => {
+  beforeEach(() => {
+    localStorage.setItem("toktickit_current_requester", JSON.stringify(mockDefaultUser));
+    vi.spyOn(api, "fetchCurrentUser").mockResolvedValue({ user: mockDefaultUser as any });
+  });
   it("renders the TokTickIT heading", () => {
     render(<App />);
     expect(screen.getByText(/TokTickIT/i)).toBeInTheDocument();

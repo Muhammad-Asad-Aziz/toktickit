@@ -1,26 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as api from "./api.js";
 import { Category } from "./api.js";
-import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
+import { AuthProvider, useAuth } from "./context/AuthContext.js";
+import { RequesterProvider } from "./context/RequesterContext.js";
 import AppHeader from "./components/AppHeader.js";
-import RequesterModal from "./components/RequesterModal.js";
+import LoginView from "./components/LoginView.js";
+import ChangePasswordView from "./components/ChangePasswordView.js";
 import CreateTicketForm from "./components/CreateTicketForm.js";
 import MyTickets from "./components/MyTickets.js";
 import RequesterTicketDetail from "./components/RequesterTicketDetail.js";
+import StaffTicketQueue from "./components/StaffTicketQueue.js";
+import StaffTicketDetail from "./components/StaffTicketDetail.js";
+import UserManagement from "./components/UserManagement.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 
 interface AppContentProps {
-  initialView?: "create" | "my-tickets" | "detail";
+  initialView?: "create" | "my-tickets" | "detail" | "staff-queue" | "user-admin";
   initialTicketId?: number | null;
 }
 
-function AppContent({ initialView = "create", initialTicketId = null }: AppContentProps) {
-  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail">(initialView);
+function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail" | "staff-queue" | "user-admin">(
+    initialView ||
+      (user && user.role === "ADMINISTRATOR"
+        ? "user-admin"
+        : user && user.role === "IT_STAFF"
+        ? "staff-queue"
+        : "create")
+  );
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(initialTicketId);
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
-  const { currentRequester, offlineWarning } = useRequester();
+
+  // Default staff and admin users to their respective home views if no explicit initialView
+  useEffect(() => {
+    if (!initialView && user) {
+      if (user.role === "ADMINISTRATOR") {
+        setActiveView("user-admin");
+      } else if (user.role === "IT_STAFF") {
+        setActiveView("staff-queue");
+      } else {
+        setActiveView("create");
+      }
+    }
+  }, [user?.id, user?.role, initialView]);
 
   async function handleCheck() {
     setState("loading");
@@ -33,43 +58,113 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
     }
   }
 
-  const handleHeaderViewChange = (view: "create" | "my-tickets") => {
+  const handleHeaderViewChange = (view: "create" | "my-tickets" | "staff-queue" | "user-admin") => {
     setActiveView(view);
     setSelectedTicketId(null);
   };
 
+  // 1. Initial Session Loading State
+  if (isLoading) {
+    return (
+      <div
+        className="min-vh-100 d-flex flex-column justify-content-center align-items-center"
+        style={{ backgroundColor: "#F5F7F6" }}
+        data-testid="app-loading-state"
+      >
+        <div className="spinner-border text-success" role="status" style={{ width: "3rem", height: "3rem" }}>
+          <span className="visually-hidden">Loading TokTickIT...</span>
+        </div>
+        <p className="mt-3 text-muted">Loading TokTickIT Desk...</p>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated State -> Render Login View
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
+        <AppHeader />
+        <main className="container py-4 flex-grow-1">
+          <LoginView />
+        </main>
+      </div>
+    );
+  }
+
+  // 3. Mandatory First-Login Password Change Barrier (BR-02)
+  if (user.mustChangePassword) {
+    return (
+      <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
+        <AppHeader />
+        <main className="container py-4 flex-grow-1">
+          <ChangePasswordView />
+        </main>
+      </div>
+    );
+  }
+
+  // 4. Authenticated Operational Views
   return (
     <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
       <AppHeader
-        activeView={activeView === "detail" ? "my-tickets" : activeView}
+        activeView={
+          activeView === "detail"
+            ? user.role === "REQUESTER"
+              ? "my-tickets"
+              : "staff-queue"
+            : activeView
+        }
         onViewChange={handleHeaderViewChange}
       />
-
-      {offlineWarning && (
-        <div className="alert alert-warning mb-0 text-center rounded-0 py-2 border-0" role="alert">
-          <strong>Network warning:</strong> Unable to synchronize user identity with server. Working offline.
-        </div>
-      )}
 
       <main
         className="container py-4 flex-grow-1"
         style={{ maxWidth: activeView === "create" ? 860 : 1320 }}
       >
-        {activeView === "create" ? (
+        {activeView === "user-admin" && user.role === "ADMINISTRATOR" ? (
+          /* Administrator User Management View (Issue 15) */
+          <div className="mb-4">
+            <UserManagement />
+          </div>
+        ) : activeView === "create" ? (
           /* Create Ticket Form View (Feature 7 / Feature 3) */
           <div className="mb-4">
-            <CreateTicketForm onViewTickets={() => setActiveView("my-tickets")} />
+            <CreateTicketForm
+              onViewTickets={() =>
+                setActiveView(user.role === "REQUESTER" ? "my-tickets" : "staff-queue")
+              }
+            />
           </div>
-        ) : activeView === "detail" && selectedTicketId ? (
-          /* Ticket Detail View (Feature 9 / Feature 5) */
+        ) : activeView === "staff-queue" ? (
+          /* IT Staff Ticket Queue View (Issue 13 / Feature 3) */
           <div className="mb-4">
-            <RequesterTicketDetail
-              ticketId={selectedTicketId}
-              onBack={() => {
-                setActiveView("my-tickets");
-                setSelectedTicketId(null);
+            <StaffTicketQueue
+              onViewTicket={(ticketId) => {
+                setSelectedTicketId(ticketId);
+                setActiveView("detail");
               }}
             />
+          </div>
+        ) : activeView === "detail" && selectedTicketId ? (
+          /* Ticket Detail View (Issue 14 Staff / Requester) */
+          <div className="mb-4">
+            {user.role === "REQUESTER" ? (
+              <RequesterTicketDetail
+                ticketId={selectedTicketId}
+                onBack={() => {
+                  setActiveView("my-tickets");
+                  setSelectedTicketId(null);
+                }}
+              />
+            ) : (
+              <StaffTicketDetail
+                ticketId={selectedTicketId}
+                onBack={() => {
+                  setActiveView("staff-queue");
+                  setSelectedTicketId(null);
+                }}
+              />
+            )}
           </div>
         ) : (
           /* My Tickets View (Feature 8 / Feature 4) */
@@ -121,16 +216,16 @@ function AppContent({ initialView = "create", initialTicketId = null }: AppConte
           </div>
         </div>
       </main>
-
-      <RequesterModal />
     </div>
   );
 }
 
-export default function App({ initialView = "create", initialTicketId = null }: AppContentProps) {
+export default function App({ initialView, initialTicketId = null }: AppContentProps) {
   return (
-    <RequesterProvider>
-      <AppContent initialView={initialView} initialTicketId={initialTicketId} />
-    </RequesterProvider>
+    <AuthProvider>
+      <RequesterProvider>
+        <AppContent initialView={initialView} initialTicketId={initialTicketId} />
+      </RequesterProvider>
+    </AuthProvider>
   );
 }

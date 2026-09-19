@@ -11,22 +11,57 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Requester User (Simulated Development Identity)
+// 0. Role Enum (Strict Single-Role Policy per BR-09)
 // ---------------------------------------------------------------------------
-model RequesterUser {
+enum Role {
+  REQUESTER
+  IT_STAFF
+  ADMINISTRATOR
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  NEW
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_REQUESTER
+  RESOLVED
+  CLOSED
+  REOPENED
+  CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// 1. User Model (Unified Authenticated Identity)
+// ---------------------------------------------------------------------------
+model User {
   id                 Int          @id @default(autoincrement())
   name               String
-  email              String       @unique
-  department         String?
+  email              String       @unique // Stored and queried in normalized lowercase (BR-10)
+  passwordHash       String       @default("$2a$10$7EqJtq98hPqEX7fNZaFWoO.8/E5O0H6uFvj/4J8O0M/v4e6T9i0yS")
+  role               Role         @default(REQUESTER)
+  department         String?      // Preserved from Lab 2 for academic/staff context
   isActive           Boolean      @default(true)
+  mustChangePassword Boolean      @default(true) // Forces change on first login (FR-02, BR-02)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
   // Relational Integrity
-  tickets            Ticket[]     @relation("RequesterTickets")
-  removedAttachments Attachment[] @relation("RequesterRemovedAttachments")
+  submittedTickets   Ticket[]     @relation("RequesterTickets")
+  assignedTickets    Ticket[]     @relation("StaffOwnedTickets")
+  removedAttachments Attachment[] @relation("UserRemovedAttachments")
 
-  @@map("requester_users")
+  // Issue 14 increments
+  publicComments     PublicComment[] @relation("UserPublicComments")
+  internalNotes      InternalNote[]  @relation("UserInternalNotes")
+
+  @@map("users")
 }
 
 // ---------------------------------------------------------------------------
@@ -67,27 +102,37 @@ model Category {
 // 4. Ticket (Service Desk Incident / Request)
 // ---------------------------------------------------------------------------
 model Ticket {
-  id                Int           @id @default(autoincrement())
-  ticketNumber      String        @unique @db.VarChar(32) // Format: TKT-YYYY-NNNNN
-  requesterId       Int
-  categoryId        Int
-  relatedSystemId   Int
-  summary           String        @db.VarChar(100)
-  description       String        @db.Text
-  requestedPriority String        // Low, Medium, High, Urgent
-  itPriority        String?       // Low, Medium, High, Urgent
-  currentStatus     String        @default("New") // New, Assigned, In Progress, Pending Requester, Resolved, Closed, Cancelled
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id                  Int           @id @default(autoincrement())
+  ticketNumber        String        @unique @db.VarChar(32) // Format: TKT-YYYY-NNNNN
+  requesterId         Int
+  ownerId             Int?
+  categoryId          Int
+  relatedSystemId     Int
+  summary             String        @db.VarChar(100)
+  description         String        @db.Text
+  requestedPriority   Priority      @default(MEDIUM)
+  itPriority          Priority?     @default(MEDIUM)
+  currentStatus       TicketStatus  @default(NEW)
+  requesterResolvedAt DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
-  // Relations
-  requester         RequesterUser @relation("RequesterTickets", fields: [requesterId], references: [id], onDelete: Restrict)
-  category          Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  relatedSystem     RelatedSystem @relation(fields: [relatedSystemId], references: [id], onDelete: Restrict)
-  attachments       Attachment[]
+  // Relations (Repointed to User model)
+  requester           User          @relation("RequesterTickets", fields: [requesterId], references: [id], onDelete: Restrict)
+  owner               User?         @relation("StaffOwnedTickets", fields: [ownerId], references: [id], onDelete: SetNull)
+  category            Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  relatedSystem       RelatedSystem @relation(fields: [relatedSystemId], references: [id], onDelete: Restrict)
+  attachments         Attachment[]
+
+  // Issue 14 increments
+  publicComments      PublicComment[]
+  internalNotes       InternalNote[]
 
   @@index([requesterId])
+  @@index([ownerId])
   @@index([currentStatus])
+  @@index([itPriority])
+  @@index([createdAt])
   @@map("tickets")
 }
 
@@ -95,22 +140,22 @@ model Ticket {
 // 5. Attachment (Supporting File Metadata & Soft-Removal Tombstone)
 // ---------------------------------------------------------------------------
 model Attachment {
-  id                   Int            @id @default(autoincrement())
+  id                   Int       @id @default(autoincrement())
   ticketId             Int
   originalFilename     String
-  storedFilename       String         @unique
+  storedFilename       String    @unique
   mimeType             String
-  fileSize             Int            // Size in bytes
-  isRemoved            Boolean        @default(false)
-  removalReason        String?        @db.Text
+  fileSize             Int       // Size in bytes
+  isRemoved            Boolean   @default(false)
+  removalReason        String?   @db.Text
   removedAt            DateTime?
   removedByRequesterId Int?
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  // Relations
-  ticket               Ticket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  removedByRequester   RequesterUser? @relation("RequesterRemovedAttachments", fields: [removedByRequesterId], references: [id], onDelete: SetNull)
+  // Relations (Repointed to User model)
+  ticket               Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  removedByUser        User?     @relation("UserRemovedAttachments", fields: [removedByRequesterId], references: [id], onDelete: SetNull)
 
   @@index([ticketId])
   @@map("attachments")
@@ -125,3 +170,42 @@ model TicketNumberSequence {
 
   @@map("ticket_number_sequences")
 }
+
+// ---------------------------------------------------------------------------
+// 7. Public Comment Model (Shared Bidirectional Thread)
+// ---------------------------------------------------------------------------
+model PublicComment {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  authorId  Int
+  content   String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+
+  // Relational Integrity
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User     @relation("UserPublicComments", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("public_comments")
+}
+
+// ---------------------------------------------------------------------------
+// 8. Internal Note Model (Confidential Staff-Only Thread)
+// ---------------------------------------------------------------------------
+model InternalNote {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  authorId  Int
+  content   String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+
+  // Relational Integrity
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User     @relation("UserInternalNotes", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("internal_notes")
+}
+
