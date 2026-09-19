@@ -17,7 +17,7 @@ Repository: [`Muhammad-Asad-Aziz/toktickit`](https://github.com/Muhammad-Asad-Az
 | [#31](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/31) | `feature/13-staff-ticket-queue` | `lab3-staging` | Issue 13: IT Staff Ticket Queue & List Queries | Changes Requested $\rightarrow$ Approved | @ShortXander101205 |
 | [#32](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/32) | `feature/14-staff-ticket-detail` | `lab3-staging` | Issue 14: IT Staff Ticket Detail, Operational Controls, Comments & Notes | Approved | @ShortXander101205 |
 | [#33](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/33) | `feature/15-admin-user-management` | `lab3-staging` | Issue 15: Administrator User Management & Account Safety | Approved | @ShortXander101205 |
-| *Pending* | `feature/16-e2e-polish-release` | `lab3-staging` | Issue 16: End-to-End Test Suite, Responsive Polish & Staged Release Verification | Local Verifications Complete | *Awaiting PR submission* |
+| [#36](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/36) | `feature/16-e2e-polish-release` | `lab3-staging` | Issue 16: End-to-End Test Suite, Responsive Polish & Staged Release Verification | Approved | @ShortXander101205 |
 
 ### Reviewer Comments Received & Author Responses (from GitHub)
 
@@ -59,11 +59,11 @@ Repository: [`Muhammad-Asad-Aziz/toktickit`](https://github.com/Muhammad-Asad-Az
 * **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/33#issuecomment-5700197981))**:
   > "Thank you for your testing and review!"
 
-#### Issue 16: End-to-End Test Suite, Responsive Polish & Staged Release Verification (PR #TBD)
-* **Reviewer Comment ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > *[Placeholder: Paste reviewer comment from GitHub PR review here]*
-* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz))**:
-  > *[Placeholder: Paste author response from GitHub PR here]*
+#### Issue 16: End-to-End Test Suite, Responsive Polish & Staged Release Verification (PR #36)
+* **Reviewer Comment ([@ShortXander101205](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/36#issuecomment-5731472422))**:
+  > "The final issue looks good."
+* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/36#issuecomment-5731551780))**:
+  > "Thank you for reviewing and working with me for lab 3!"
 
 ---
 
