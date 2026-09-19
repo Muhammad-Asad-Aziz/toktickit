@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext.js";
 
 interface ChangePasswordViewProps {
@@ -13,6 +13,39 @@ export default function ChangePasswordView({ onSuccess }: ChangePasswordViewProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [confirmTouched, setConfirmTouched] = useState(false);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+
+  const safeScrollTo = (top: number) => {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.scrollTo === "function" &&
+      !window.navigator?.userAgent?.includes("jsdom")
+    ) {
+      try {
+        window.scrollTo({ top, behavior: "smooth" });
+      } catch {
+        // Safe fallback for environments lacking smooth scroll support
+      }
+    }
+  };
+
+  // Automatically scroll down once at this page to ensure the full card and submit action are prominently in view
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      safeScrollTo(160);
+      if (submitButtonRef.current && typeof submitButtonRef.current.scrollIntoView === "function") {
+        try {
+          submitButtonRef.current.scrollIntoView({ behavior: "smooth" });
+        } catch {
+          // ignore
+        }
+      }
+    }, 200);
+    return () => {
+      clearTimeout(timer);
+      safeScrollTo(0);
+    };
+  }, []);
 
   // Live evaluation of the 5 password complexity criteria
   const rules = useMemo(() => {
@@ -59,6 +92,7 @@ export default function ChangePasswordView({ onSuccess }: ChangePasswordViewProp
         newPassword,
         confirmPassword,
       });
+      safeScrollTo(0);
       if (onSuccess) {
         onSuccess();
       }
@@ -221,6 +255,7 @@ export default function ChangePasswordView({ onSuccess }: ChangePasswordViewProp
             </div>
 
             <button
+              ref={submitButtonRef}
               type="submit"
               className="btn w-100 text-white fw-semibold d-flex align-items-center justify-content-center"
               disabled={isSubmitting || !allRulesMet || !confirmPassword || isMismatch}

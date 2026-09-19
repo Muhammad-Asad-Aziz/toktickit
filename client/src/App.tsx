@@ -41,9 +41,11 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
         setActiveView("user-admin");
       } else if (user.role === "IT_STAFF") {
         setActiveView("staff-queue");
+      } else {
+        setActiveView("create");
       }
     }
-  }, [user, initialView]);
+  }, [user?.id, user?.role, initialView]);
 
   async function handleCheck() {
     setState("loading");
@@ -218,7 +220,7 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
   );
 }
 
-export default function App({ initialView = "create", initialTicketId = null }: AppContentProps) {
+export default function App({ initialView, initialTicketId = null }: AppContentProps) {
   return (
     <AuthProvider>
       <RequesterProvider>

@@ -34,6 +34,38 @@ export function RequesterProvider({ children }: { children: ReactNode }) {
   const [offlineWarning, setOfflineWarning] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Synchronize requester state with authenticated user session via storage events
+  useEffect(() => {
+    const handleStorageSync = () => {
+      try {
+        const cached = localStorage.getItem(STORAGE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setCurrentRequesterState({
+            id: parsed.id,
+            name: parsed.name,
+            email: parsed.email,
+            department: parsed.department,
+            isActive: parsed.isActive ?? true,
+            createdAt: parsed.createdAt || new Date().toISOString(),
+          });
+          setIsModalOpen(false);
+        } else {
+          setCurrentRequesterState(null);
+        }
+      } catch {
+        setCurrentRequesterState(null);
+      }
+    };
+
+    window.addEventListener("toktickit_requester_changed", handleStorageSync);
+    window.addEventListener("storage", handleStorageSync);
+    return () => {
+      window.removeEventListener("toktickit_requester_changed", handleStorageSync);
+      window.removeEventListener("storage", handleStorageSync);
+    };
+  }, []);
+
   async function loadRequesters() {
     setIsLoading(true);
     setError(null);

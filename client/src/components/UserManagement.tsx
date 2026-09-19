@@ -281,7 +281,7 @@ export default function UserManagement() {
   const resetPassVal = getPasswordValidation(resetPasswordVal);
 
   return (
-    <div className="container-fluid px-0" style={{ maxWidth: 1320 }}>
+    <div className="container-fluid px-0" style={{ maxWidth: 1320 }} data-testid="user-management-view">
       {/* Header & Primary CTA */}
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>

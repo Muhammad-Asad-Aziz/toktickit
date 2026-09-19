@@ -274,6 +274,7 @@ export default function MyTickets({ onCreateTicket, onViewTicket }: MyTicketsPro
 
   return (
     <div className="container-fluid px-0" data-testid="my-tickets-container">
+      <div data-testid="my-tickets-view">
       {/* Header Bar */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
         <div>
@@ -816,6 +817,7 @@ export default function MyTickets({ onCreateTicket, onViewTicket }: MyTicketsPro
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

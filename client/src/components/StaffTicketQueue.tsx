@@ -198,7 +198,11 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
   const endRecord = Math.min(page * pageSize, totalCount);
 
   return (
-    <div className="card shadow-sm border-0" style={{ backgroundColor: "var(--zen-surface)" }}>
+    <div
+      className="card shadow-sm border-0"
+      style={{ backgroundColor: "var(--zen-surface)" }}
+      data-testid="staff-ticket-queue-view"
+    >
       {/* Top Header & Counter Banner */}
       <div
         className="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3 border-bottom"
@@ -437,6 +441,7 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
                     className="sortable-th"
                     onClick={() => handleSort("ticketNumber")}
                     data-tooltip="Sort by Ticket Number"
+                    data-testid="th-sort-ticket-number"
                   >
                     Ticket No{getSortIndicator("ticketNumber")}
                   </th>
@@ -445,6 +450,7 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
                     className="sortable-th"
                     onClick={() => handleSort("createdAt")}
                     data-tooltip="Sort by Creation Date"
+                    data-testid="th-sort-created-at"
                   >
                     Created Date{getSortIndicator("createdAt")}
                   </th>
@@ -453,6 +459,7 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
                     className="sortable-th"
                     onClick={() => handleSort("summary")}
                     data-tooltip="Sort by Summary"
+                    data-testid="th-sort-summary"
                   >
                     Summary{getSortIndicator("summary")}
                   </th>
@@ -463,6 +470,7 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
                     className="sortable-th"
                     onClick={() => handleSort("itPriority")}
                     data-tooltip="Sort by IT Priority"
+                    data-testid="th-sort-priority"
                   >
                     IT Prio{getSortIndicator("itPriority")}
                   </th>
@@ -471,6 +479,7 @@ export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps
                     className="sortable-th"
                     onClick={() => handleSort("currentStatus")}
                     data-tooltip="Sort by Status"
+                    data-testid="th-sort-status"
                   >
                     Status{getSortIndicator("currentStatus")}
                   </th>
