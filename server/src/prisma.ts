@@ -1,5 +1,22 @@
 import { PrismaClient } from "@prisma/client";
 
+// Ensure environment variables are loaded if not already provided
+if (!process.env.DATABASE_URL && typeof process.loadEnvFile === "function") {
+  try {
+    process.loadEnvFile();
+  } catch {
+    try {
+      process.loadEnvFile(".env");
+    } catch {
+      try {
+        process.loadEnvFile("server/.env");
+      } catch {
+        // ignore if not found
+      }
+    }
+  }
+}
+
 // Backwards compatibility for Lab 2 test suites that referenced prisma.requesterUser
 declare module "@prisma/client" {
   interface PrismaClient {
