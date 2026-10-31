@@ -8,6 +8,7 @@ import {
 } from "../api.js";
 import { useRequester } from "../context/RequesterContext.js";
 import AttachmentSection from "./AttachmentSection.js";
+import ActionsTakenSection from "./ActionsTakenSection.js";
 
 interface RequesterTicketDetailProps {
   ticketId: number;
@@ -490,6 +491,15 @@ export default function RequesterTicketDetail({
               });
             }}
           />
+
+          {/* Actions Taken Section (Feature 19) */}
+          <div className="mt-4">
+            <ActionsTakenSection
+              ticketId={ticket.id}
+              readOnly={true}
+              currentUser={currentRequester ? { ...currentRequester, role: "REQUESTER" } : null}
+            />
+          </div>
 
           {/* Public Comments Section (Feature 14) */}
           {ticket.publicComments !== undefined && (

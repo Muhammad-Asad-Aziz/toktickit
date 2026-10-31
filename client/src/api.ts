@@ -968,3 +968,131 @@ export async function resetUserPassword(
   return data;
 }
 
+
+
+// ============================================================================
+// Actions Taken Subsystem DTOs & APIs (Sprint 4 / Issue 19)
+// ============================================================================
+
+export interface PerformedByUserDTO {
+  id: number;
+  name: string;
+  email: string;
+  role: "IT_STAFF" | "ADMINISTRATOR" | "REQUESTER";
+}
+
+export interface ActionTakenDTO {
+  id: number;
+  ticketId: number;
+  actionDateTime: string; // ISO 8601 string
+  actionDescription: string;
+  result: string;
+  followUpRequired: boolean;
+  followUpNote: string | null;
+  attachmentNotes: string | null;
+  performedBy: PerformedByUserDTO;
+  createdAt: string; // ISO 8601 string
+  updatedAt: string; // ISO 8601 string
+}
+
+export interface CreateActionTakenPayload {
+  actionDateTime?: string; // Optional ISO 8601; defaults to NOW()
+  actionDescription: string; // 5 - 1000 characters
+  result: string; // 2 - 1000 characters
+  followUpRequired: boolean;
+  followUpNote?: string | null; // Required if followUpRequired is true (3 - 1000 chars)
+  attachmentNotes?: string | null; // Optional, max 500 chars
+}
+
+export interface UpdateActionTakenPayload {
+  actionDateTime?: string;
+  actionDescription?: string;
+  result?: string;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+  versionTimestamp?: string; // Optimistic concurrency check against updatedAt
+}
+
+export interface ActionTakenListResponse {
+  actionsTaken: ActionTakenDTO[];
+}
+
+export interface ActionTakenSingleResponse {
+  actionTaken: ActionTakenDTO;
+}
+
+export async function fetchActionsTaken(ticketId: number): Promise<ActionTakenListResponse> {
+  const res = await fetch(`${API_URL}/api/v1/tickets/${ticketId}/actions-taken`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error: any = new Error(
+      data.error?.message || `Failed to fetch actions taken (${res.status})`
+    );
+    error.code = data.error?.code;
+    error.fieldErrors = data.error?.fieldErrors;
+    throw error;
+  }
+  return data;
+}
+
+export async function createActionTaken(
+  ticketId: number,
+  payload: CreateActionTakenPayload
+): Promise<ActionTakenSingleResponse> {
+  const res = await fetch(`${API_URL}/api/v1/tickets/${ticketId}/actions-taken`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error: any = new Error(
+      data.error?.fieldErrors?.[0]?.message ||
+      data.error?.message ||
+      `Failed to create action taken (${res.status})`
+    );
+    error.code = data.error?.code;
+    error.fieldErrors = data.error?.fieldErrors;
+    throw error;
+  }
+  return data;
+}
+
+export async function updateActionTaken(
+  ticketId: number,
+  actionId: number,
+  payload: UpdateActionTakenPayload
+): Promise<ActionTakenSingleResponse> {
+  const res = await fetch(`${API_URL}/api/v1/tickets/${ticketId}/actions-taken/${actionId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error: any = new Error(
+      data.error?.fieldErrors?.[0]?.message ||
+      data.error?.message ||
+      `Failed to update action taken (${res.status})`
+    );
+    error.code = data.error?.code;
+    error.fieldErrors = data.error?.fieldErrors;
+    throw error;
+  }
+  return data;
+}

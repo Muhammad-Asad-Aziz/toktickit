@@ -14,6 +14,7 @@ import {
 } from "../api.js";
 import { useAuth } from "../context/AuthContext.js";
 import AttachmentSection from "./AttachmentSection.js";
+import ActionsTakenSection from "./ActionsTakenSection.js";
 
 interface StaffTicketDetailProps {
   ticketId: number;
@@ -617,6 +618,17 @@ export default function StaffTicketDetail({
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Actions Taken Section (Feature 19) */}
+      <div className="row g-4 mb-4">
+        <div className="col-12">
+          <ActionsTakenSection
+            ticketId={ticket.id}
+            readOnly={false}
+            currentUser={currentUser}
+          />
         </div>
       </div>
 
