@@ -43,12 +43,20 @@ test.describe('Issue 21: Role-Based Dashboards Visual Evidence Capture', () => {
       path: path.join(REQUESTER_DIR, 'requester-dashboard-desktop.png'),
       fullPage: true,
     });
+    await page.screenshot({
+      path: path.join(REQUESTER_DIR, '01-requester-dashboard-desktop.png'),
+      fullPage: true,
+    });
 
     // 1.2 Tablet Viewport (768x1024)
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(500);
     await page.screenshot({
       path: path.join(REQUESTER_DIR, 'requester-dashboard-tablet.png'),
+      fullPage: true,
+    });
+    await page.screenshot({
+      path: path.join(REQUESTER_DIR, '02-requester-dashboard-tablet.png'),
       fullPage: true,
     });
 
@@ -59,11 +67,24 @@ test.describe('Issue 21: Role-Based Dashboards Visual Evidence Capture', () => {
       path: path.join(REQUESTER_DIR, 'requester-dashboard-mobile.png'),
       fullPage: true,
     });
+    await page.screenshot({
+      path: path.join(REQUESTER_DIR, '03-requester-dashboard-mobile.png'),
+      fullPage: true,
+    });
+
+    // 1.4 Drill-Down Interaction to MyTickets
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.locator('[data-testid="drilldown-my-open"]').click();
+    await expect(page.locator('[data-testid="my-tickets-container"]')).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(500);
+    await page.screenshot({
+      path: path.join(REQUESTER_DIR, '04-requester-drilldown-mytickets.png'),
+      fullPage: true,
+    });
 
     // ---------------------------------------------------------------------------
     // Part 2: IT Staff Dashboard (Wichai IT)
     // ---------------------------------------------------------------------------
-    await page.setViewportSize({ width: 1280, height: 800 });
     await page.locator('[data-testid="logout-button"]').click();
     await expect(page.locator('[data-testid="login-email-input"]')).toBeVisible({ timeout: 10000 });
 
@@ -83,12 +104,20 @@ test.describe('Issue 21: Role-Based Dashboards Visual Evidence Capture', () => {
       path: path.join(STAFF_DIR, 'staff-dashboard-desktop.png'),
       fullPage: true,
     });
+    await page.screenshot({
+      path: path.join(STAFF_DIR, '01-staff-dashboard-desktop.png'),
+      fullPage: true,
+    });
 
     // 2.2 Tablet Viewport (768x1024)
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(500);
     await page.screenshot({
       path: path.join(STAFF_DIR, 'staff-dashboard-tablet.png'),
+      fullPage: true,
+    });
+    await page.screenshot({
+      path: path.join(STAFF_DIR, '02-staff-dashboard-tablet.png'),
       fullPage: true,
     });
 
@@ -99,11 +128,24 @@ test.describe('Issue 21: Role-Based Dashboards Visual Evidence Capture', () => {
       path: path.join(STAFF_DIR, 'staff-dashboard-mobile.png'),
       fullPage: true,
     });
+    await page.screenshot({
+      path: path.join(STAFF_DIR, '03-staff-dashboard-mobile.png'),
+      fullPage: true,
+    });
+
+    // 2.4 Drill-Down Interaction to Unassigned Queue
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.locator('[data-testid="drilldown-unassigned"]').click();
+    await expect(page.locator('[data-testid="staff-ticket-queue-view"]')).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(500);
+    await page.screenshot({
+      path: path.join(STAFF_DIR, '04-staff-drilldown-queue.png'),
+      fullPage: true,
+    });
 
     // ---------------------------------------------------------------------------
     // Part 3: Administrator Dashboard with System Tallies (Admin TokTick)
     // ---------------------------------------------------------------------------
-    await page.setViewportSize({ width: 1280, height: 800 });
     await page.locator('[data-testid="logout-button"]').click();
     await expect(page.locator('[data-testid="login-email-input"]')).toBeVisible({ timeout: 10000 });
 
@@ -121,6 +163,10 @@ test.describe('Issue 21: Role-Based Dashboards Visual Evidence Capture', () => {
     await page.waitForTimeout(500);
     await page.screenshot({
       path: path.join(STAFF_DIR, 'admin-dashboard-desktop.png'),
+      fullPage: true,
+    });
+    await page.screenshot({
+      path: path.join(STAFF_DIR, '05-admin-dashboard-desktop.png'),
       fullPage: true,
     });
   });
