@@ -752,10 +752,28 @@ export async function updateTicketPriority(
   return data;
 }
 
+export interface TransitionTicketStatusPayload {
+  status: string;
+  cancellationReason?: string | null;
+  versionTimestamp?: string;
+}
+
+export interface TransitionTicketStatusResponse {
+  ticket: {
+    id: number;
+    ticketNumber: string;
+    currentStatus: string;
+    updatedAt: string;
+  };
+  message: string;
+  currentStatus: string;
+}
+
 export async function transitionTicketStatus(
   ticketId: number,
-  status: string
-): Promise<{ message: string; currentStatus: string }> {
+  payload: TransitionTicketStatusPayload | string
+): Promise<TransitionTicketStatusResponse> {
+  const body = typeof payload === "string" ? { status: payload } : payload;
   const res = await fetch(`${API_URL}/api/v1/staff/tickets/${ticketId}/status`, {
     method: "PATCH",
     headers: {
@@ -763,12 +781,15 @@ export async function transitionTicketStatus(
       Accept: "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify(body),
   });
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error?.message || "Failed to transition ticket status");
+    const error: any = new Error(data.error?.message || "Failed to transition ticket status");
+    error.status = res.status;
+    error.code = data.error?.code;
+    throw error;
   }
 
   return data;
