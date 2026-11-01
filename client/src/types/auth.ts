@@ -10,6 +10,7 @@ export interface User {
   department?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  isLegacyRequester?: boolean;
 }
 
 export interface LoginCredentials {

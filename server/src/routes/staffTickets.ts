@@ -218,7 +218,7 @@ export async function assignTicketOwner(req: Request, res: Response) {
       newOwner = { id: targetUser.id, name: targetUser.name, email: targetUser.email };
     }
 
-    await prisma.ticket.update({
+    const updated = await prisma.ticket.update({
       where: { id: ticketId },
       data: { ownerId: newOwner ? newOwner.id : null },
     });
@@ -226,6 +226,7 @@ export async function assignTicketOwner(req: Request, res: Response) {
     return res.status(200).json({
       message: "Ownership updated successfully.",
       owner: newOwner,
+      updatedAt: updated.updatedAt,
     });
   } catch (error) {
     console.error("Failed to update ticket ownership:", error);
@@ -281,7 +282,7 @@ export async function updateTicketPriority(req: Request, res: Response) {
     }
 
     const normalizedPriority = String(itPriority).toUpperCase() as Priority;
-    await prisma.ticket.update({
+    const updated = await prisma.ticket.update({
       where: { id: ticketId },
       data: { itPriority: normalizedPriority },
     });
@@ -289,6 +290,7 @@ export async function updateTicketPriority(req: Request, res: Response) {
     return res.status(200).json({
       message: "IT Priority updated.",
       itPriority: normalizedPriority,
+      updatedAt: updated.updatedAt,
     });
   } catch (error) {
     console.error("Failed to update IT Priority:", error);
@@ -302,20 +304,21 @@ export async function updateTicketPriority(req: Request, res: Response) {
   }
 }
 
-const ALLOWED_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
-  NEW: [TicketStatus.OPEN, TicketStatus.CANCELLED],
-  OPEN: [TicketStatus.IN_PROGRESS, TicketStatus.WAITING_FOR_REQUESTER, TicketStatus.CANCELLED],
+export const ALLOWED_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
+  NEW: [TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED],
+  OPEN: [TicketStatus.IN_PROGRESS, TicketStatus.WAITING_FOR_REQUESTER, TicketStatus.RESOLVED, TicketStatus.CANCELLED],
   IN_PROGRESS: [TicketStatus.WAITING_FOR_REQUESTER, TicketStatus.RESOLVED, TicketStatus.CANCELLED],
-  WAITING_FOR_REQUESTER: [TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED],
+  WAITING_FOR_REQUESTER: [TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED, TicketStatus.CANCELLED],
   RESOLVED: [TicketStatus.CLOSED, TicketStatus.REOPENED],
-  CLOSED: [TicketStatus.REOPENED],
-  REOPENED: [TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED],
+  CLOSED: [],
+  REOPENED: [TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED, TicketStatus.CANCELLED],
   CANCELLED: [],
 };
 
 /**
  * PATCH /api/v1/staff/tickets/:id/status
- * Transition ticket status adhering to state machine transition matrix.
+ * Transition ticket status adhering to state machine transition matrix,
+ * resolution gate (BR-07), and optimistic concurrency control (BR-10).
  */
 export async function transitionTicketStatus(req: Request, res: Response) {
   try {
@@ -342,7 +345,7 @@ export async function transitionTicketStatus(req: Request, res: Response) {
       });
     }
 
-    const { status } = req.body;
+    const { status, cancellationReason, versionTimestamp, updatedAt } = req.body;
     const validStatuses = Object.values(TicketStatus) as string[];
     if (!status || !validStatuses.includes(String(status).toUpperCase())) {
       return res.status(400).json({
@@ -366,14 +369,81 @@ export async function transitionTicketStatus(req: Request, res: Response) {
       });
     }
 
-    await prisma.ticket.update({
+    // Optimistic Concurrency Control (BR-10 / BR-09)
+    const incomingTimestamp = versionTimestamp || updatedAt;
+    if (incomingTimestamp) {
+      const clientTime = new Date(incomingTimestamp).getTime();
+      const serverTime = new Date(ticket.updatedAt).getTime();
+      if (isNaN(clientTime) || Math.abs(clientTime - serverTime) > 1000) {
+        return res.status(409).json({
+          error: {
+            code: "STALE_RECORD_CONFLICT",
+            message: "The ticket was modified by another user. Please reload the ticket to view the latest state.",
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }
+    }
+
+    // Resolution Gate Invariant (BR-07)
+    if (targetStatus === TicketStatus.RESOLVED || targetStatus === TicketStatus.CLOSED) {
+      const actionsCount = await prisma.actionTaken.count({
+        where: { ticketId: ticket.id },
+      });
+      if (actionsCount === 0) {
+        return res.status(400).json({
+          error: {
+            code: "RESOLUTION_REQUIRES_ACTION_TAKEN",
+            message: "Cannot resolve ticket without at least one recorded Action Taken.",
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }
+    }
+
+    // Cancellation Reason Validation
+    let trimmedCancellationReason: string | null = null;
+    if (targetStatus === TicketStatus.CANCELLED) {
+      if (
+        !cancellationReason ||
+        typeof cancellationReason !== "string" ||
+        cancellationReason.trim().length < 5
+      ) {
+        return res.status(400).json({
+          error: {
+            code: "VALIDATION_FAILED",
+            message: "Cancellation reason must be at least 5 characters.",
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }
+      trimmedCancellationReason = cancellationReason.trim();
+    }
+
+    const updated = await prisma.ticket.update({
       where: { id: ticketId },
       data: { currentStatus: targetStatus },
     });
 
+    if (trimmedCancellationReason && req.user) {
+      await prisma.internalNote.create({
+        data: {
+          ticketId,
+          authorId: req.user.id,
+          content: `Ticket cancelled by ${req.user.name}. Reason: ${trimmedCancellationReason}`,
+        },
+      });
+    }
+
     return res.status(200).json({
-      message: "Ticket status transitioned.",
+      message: `Ticket status updated to ${targetStatus}.`,
       currentStatus: targetStatus,
+      ticket: {
+        id: updated.id,
+        ticketNumber: updated.ticketNumber,
+        currentStatus: updated.currentStatus,
+        updatedAt: updated.updatedAt.toISOString(),
+      },
     });
   } catch (error) {
     console.error("Failed to transition ticket status:", error);

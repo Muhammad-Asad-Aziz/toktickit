@@ -11,6 +11,7 @@ import { useRequester } from "../context/RequesterContext.js";
 interface MyTicketsProps {
   onCreateTicket?: () => void;
   onViewTicket?: (ticketId: number) => void;
+  initialStatusFilter?: string;
 }
 
 type SortColumn =
@@ -21,7 +22,11 @@ type SortColumn =
   | "itPriority"
   | "currentStatus";
 
-export default function MyTickets({ onCreateTicket, onViewTicket }: MyTicketsProps) {
+export default function MyTickets({
+  onCreateTicket,
+  onViewTicket,
+  initialStatusFilter,
+}: MyTicketsProps) {
   const { currentRequester } = useRequester();
 
   // Reference data
@@ -36,7 +41,15 @@ export default function MyTickets({ onCreateTicket, onViewTicket }: MyTicketsPro
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedRequestedPriority, setSelectedRequestedPriority] = useState<string>("");
   const [selectedItPriority, setSelectedItPriority] = useState<string>("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>(initialStatusFilter || "");
+
+  // Synchronize initialStatusFilter if updated from drill-down
+  useEffect(() => {
+    if (initialStatusFilter !== undefined) {
+      setSelectedStatus(initialStatusFilter);
+      setCurrentPage(1);
+    }
+  }, [initialStatusFilter]);
 
   // Sorting & pagination states
   const [sortBy, setSortBy] = useState<SortColumn>("createdAt");

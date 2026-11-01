@@ -9,6 +9,9 @@ import {
 
 export interface StaffTicketQueueProps {
   onViewTicket?: (ticketId: number) => void;
+  initialStatusFilter?: string;
+  initialOwnerFilter?: string;
+  initialPriorityFilter?: string;
 }
 
 type SortColumn = "createdAt" | "ticketNumber" | "summary" | "itPriority" | "currentStatus";
@@ -42,16 +45,43 @@ const PRIORITY_BADGE_STYLES: Record<string, { bg: string; color: string; label: 
   URGENT: { bg: "#FEE2E2", color: "#991B1B", label: "Urgent" },
 };
 
-export default function StaffTicketQueue({ onViewTicket }: StaffTicketQueueProps) {
+export default function StaffTicketQueue({
+  onViewTicket,
+  initialStatusFilter,
+  initialOwnerFilter,
+  initialPriorityFilter,
+}: StaffTicketQueueProps) {
   // Reference categories
   const [categories, setCategories] = useState<Category[]>([]);
 
   // Filter and search parameters
   const [search, setSearch] = useState<string>("");
-  const [status, setStatus] = useState<string>("");
+  const [status, setStatus] = useState<string>(initialStatusFilter || "");
   const [category, setCategory] = useState<string>("");
-  const [itPriority, setItPriority] = useState<string>("");
-  const [owner, setOwner] = useState<string>("");
+  const [itPriority, setItPriority] = useState<string>(initialPriorityFilter || "");
+  const [owner, setOwner] = useState<string>(initialOwnerFilter || "");
+
+  // Synchronize drill-down filter updates
+  useEffect(() => {
+    if (initialStatusFilter !== undefined) {
+      setStatus(initialStatusFilter);
+      setPage(1);
+    }
+  }, [initialStatusFilter]);
+
+  useEffect(() => {
+    if (initialOwnerFilter !== undefined) {
+      setOwner(initialOwnerFilter);
+      setPage(1);
+    }
+  }, [initialOwnerFilter]);
+
+  useEffect(() => {
+    if (initialPriorityFilter !== undefined) {
+      setItPriority(initialPriorityFilter);
+      setPage(1);
+    }
+  }, [initialPriorityFilter]);
 
   // Sorting and pagination
   const [sortBy, setSortBy] = useState<SortColumn>("createdAt");

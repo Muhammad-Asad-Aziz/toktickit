@@ -61,6 +61,9 @@ model User {
   publicComments     PublicComment[] @relation("UserPublicComments")
   internalNotes      InternalNote[]  @relation("UserInternalNotes")
 
+  // Issue 18 increment: Actions performed by this user (IT Staff / Administrator)
+  actionsTaken       ActionTaken[]   @relation("UserActionsTaken")
+
   @@map("users")
 }
 
@@ -127,6 +130,9 @@ model Ticket {
   // Issue 14 increments
   publicComments      PublicComment[]
   internalNotes       InternalNote[]
+
+  // Issue 18 increment: Parent-child relationship with discrete actions taken
+  actionsTaken        ActionTaken[]
 
   @@index([requesterId])
   @@index([ownerId])
@@ -208,4 +214,32 @@ model InternalNote {
   @@index([authorId])
   @@map("internal_notes")
 }
+
+// ---------------------------------------------------------------------------
+// 9. Action Taken Model (Issue 18 Increment: Granular Work Tracking)
+// ---------------------------------------------------------------------------
+model ActionTaken {
+  id                Int      @id @default(autoincrement())
+  ticketId          Int
+  actionDateTime    DateTime @default(now())
+  actionDescription String   @db.VarChar(1000)
+  result            String   @db.VarChar(1000)
+  performedById     Int
+  followUpRequired  Boolean  @default(false)
+  followUpNote      String?  @db.VarChar(1000)
+  attachmentNotes   String?  @db.VarChar(500)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relational Integrity
+  ticket            Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  performedBy       User     @relation("UserActionsTaken", fields: [performedById], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([performedById])
+  @@index([actionDateTime])
+  @@index([ticketId, actionDateTime])
+  @@map("actions_taken")
+}
+
 

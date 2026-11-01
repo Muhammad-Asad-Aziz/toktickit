@@ -15,6 +15,7 @@ server/prisma/*.db
 # file uploads
 server/uploads/*
 !server/uploads/.gitkeep
+uploads/
 
 # playwright test artifacts & visual evidence screenshots
 test-results/

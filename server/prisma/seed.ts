@@ -532,6 +532,114 @@ export async function seed(prismaClient = getPrisma()) {
       fs.writeFileSync(path.join(uploadDirServer, "seed-projector-error-log.png"), "Mock PNG error log content");
     }
   }
+
+  // 7. Seed Actions Taken (Issue 18 Increment)
+  const actionsSeedPlan = [
+    {
+      ticketNumber: "TKT-2026-00001",
+      actions: [
+        {
+          performerEmail: "wichai.it@kmutt.ac.th",
+          actionDateTime: new Date("2026-09-03T11:15:00.000Z"),
+          actionDescription: "Inspected CB2 3rd floor rack switch. Port 14 link flapping detected. Replaced patch cord.",
+          result: "Port link stabilized at 1Gbps full duplex. Packet loss dropped to 0%.",
+          followUpRequired: true,
+          followUpNote: "Check port drop statistics tomorrow morning after 9:00 AM lectures.",
+          attachmentNotes: "Cross-referenced with seed-wifi-signal-analysis.pdf.",
+        },
+        {
+          performerEmail: "ekachai.it@kmutt.ac.th",
+          actionDateTime: new Date("2026-09-03T14:30:00.000Z"),
+          actionDescription: "Conducted follow-up telemetry check on switch port 14 via SNMP console.",
+          result: "Zero CRC errors or packet drops over past 3 hours. Signal stable.",
+          followUpRequired: false,
+          followUpNote: null,
+          attachmentNotes: null,
+        },
+      ],
+    },
+    {
+      ticketNumber: "TKT-2026-00003",
+      actions: [
+        {
+          performerEmail: "nareerat.it@kmutt.ac.th",
+          actionDateTime: new Date("2026-09-03T11:30:00.000Z"),
+          actionDescription: "Analyzed LEB2 reverse proxy firewall logs. Discovered blocked subnet from student dormitories.",
+          result: "Whitelisted dormitory subnet CIDR 10.24.0.0/16 in gateway security group.",
+          followUpRequired: true,
+          followUpNote: "Request student test submission and monitor proxy latency during peak hours.",
+          attachmentNotes: null,
+        },
+        {
+          performerEmail: "wichai.it@kmutt.ac.th",
+          actionDateTime: new Date("2026-09-03T13:45:00.000Z"),
+          actionDescription: "Performed end-to-end SSL handshake test from CB2 dormitory terminal.",
+          result: "HTTPS connection succeeded in 42ms. Homework portal loaded cleanly.",
+          followUpRequired: false,
+          followUpNote: null,
+          attachmentNotes: null,
+        },
+      ],
+    },
+    {
+      ticketNumber: "TKT-2026-00004",
+      actions: [
+        {
+          performerEmail: "wichai.it@kmutt.ac.th",
+          actionDateTime: new Date("2026-09-03T12:15:00.000Z"),
+          actionDescription: "Reconfigured Cisco AnyConnect client profile on macOS Sonoma to use DTLS 1.2 tunnel.",
+          result: "VPN established successfully without packet timeouts.",
+          followUpRequired: true,
+          followUpNote: "Verify macOS auto-reconnect behavior after laptop sleep cycle.",
+          attachmentNotes: null,
+        },
+      ],
+    },
+    {
+      ticketNumber: "TKT-2026-00005",
+      actions: [
+        {
+          performerEmail: "ekachai.it@kmutt.ac.th",
+          actionDateTime: new Date("2026-09-03T13:00:00.000Z"),
+          actionDescription: "Retrieved 24-inch Dell HDMI monitor from inventory (Asset #KMUTT-MON-8812) and installed at faculty desk.",
+          result: "Dual display output working at 1920x1080 @ 60Hz.",
+          followUpRequired: false,
+          followUpNote: null,
+          attachmentNotes: "Asset delivery form signed and filed.",
+        },
+      ],
+    },
+  ];
+
+  for (const item of actionsSeedPlan) {
+    const t = await prismaClient.ticket.findUnique({
+      where: { ticketNumber: item.ticketNumber },
+    });
+    if (t) {
+      const existingCount = await prismaClient.actionTaken.count({
+        where: { ticketId: t.id },
+      });
+      if (existingCount === 0) {
+        for (const act of item.actions) {
+          const performerId = userMap.get(act.performerEmail.toLowerCase());
+          if (performerId) {
+            await prismaClient.actionTaken.create({
+              data: {
+                ticketId: t.id,
+                performedById: performerId,
+                actionDateTime: act.actionDateTime,
+                actionDescription: act.actionDescription,
+                result: act.result,
+                followUpRequired: act.followUpRequired,
+                followUpNote: act.followUpNote,
+                attachmentNotes: act.attachmentNotes,
+              },
+            });
+          }
+        }
+      }
+    }
+  }
 }
 
 // CLI execution wrapper

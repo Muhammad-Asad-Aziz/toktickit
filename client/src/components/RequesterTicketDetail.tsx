@@ -8,6 +8,7 @@ import {
 } from "../api.js";
 import { useRequester } from "../context/RequesterContext.js";
 import AttachmentSection from "./AttachmentSection.js";
+import ActionsTakenSection from "./ActionsTakenSection.js";
 
 interface RequesterTicketDetailProps {
   ticketId: number;
@@ -48,6 +49,18 @@ export default function RequesterTicketDetail({
   const [commentContent, setCommentContent] = useState<string>("");
   const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false);
   const [commentError, setCommentError] = useState<string | null>(null);
+
+  // Keyboard accessibility: Escape key modal dismissal (WCAG 2.1 AA)
+  useEffect(() => {
+    if (!showResolveModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isResolving) {
+        setShowResolveModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showResolveModal, isResolving]);
 
   const handleIndicateResolved = async () => {
     if (!ticket) return;
@@ -490,6 +503,15 @@ export default function RequesterTicketDetail({
               });
             }}
           />
+
+          {/* Actions Taken Section (Feature 19) */}
+          <div className="mt-4">
+            <ActionsTakenSection
+              ticketId={ticket.id}
+              readOnly={true}
+              currentUser={currentRequester ? { ...currentRequester, role: "REQUESTER" } : null}
+            />
+          </div>
 
           {/* Public Comments Section (Feature 14) */}
           {ticket.publicComments !== undefined && (

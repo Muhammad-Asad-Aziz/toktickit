@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           mustChangePassword: parsed.mustChangePassword ?? false,
           isActive: parsed.isActive ?? true,
           department: parsed.department,
+          isLegacyRequester: !parsed.role,
         };
       }
     } catch {
