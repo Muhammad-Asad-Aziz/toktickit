@@ -12,38 +12,35 @@ import RequesterTicketDetail from "./components/RequesterTicketDetail.js";
 import StaffTicketQueue from "./components/StaffTicketQueue.js";
 import StaffTicketDetail from "./components/StaffTicketDetail.js";
 import UserManagement from "./components/UserManagement.js";
+import RequesterDashboard from "./components/RequesterDashboard.js";
+import StaffDashboard from "./components/StaffDashboard.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
 
 interface AppContentProps {
-  initialView?: "create" | "my-tickets" | "detail" | "staff-queue" | "user-admin";
+  initialView?: "dashboard" | "create" | "my-tickets" | "detail" | "staff-queue" | "user-admin";
   initialTicketId?: number | null;
 }
 
 function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const [activeView, setActiveView] = useState<"create" | "my-tickets" | "detail" | "staff-queue" | "user-admin">(
-    initialView ||
-      (user && user.role === "ADMINISTRATOR"
-        ? "user-admin"
-        : user && user.role === "IT_STAFF"
-        ? "staff-queue"
-        : "create")
+  type ActiveView = "dashboard" | "create" | "my-tickets" | "detail" | "staff-queue" | "user-admin";
+  const [activeView, setActiveView] = useState<ActiveView>(
+    initialView || (user?.isLegacyRequester ? "create" : "dashboard")
   );
+  const [drillDownFilters, setDrillDownFilters] = useState<{
+    status?: string;
+    owner?: string;
+    itPriority?: string;
+  }>({});
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(initialTicketId);
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
 
-  // Default staff and admin users to their respective home views if no explicit initialView
+  // Default post-login landing view to role-appropriate dashboard (AC-21.5, BR-14)
   useEffect(() => {
     if (!initialView && user) {
-      if (user.role === "ADMINISTRATOR") {
-        setActiveView("user-admin");
-      } else if (user.role === "IT_STAFF") {
-        setActiveView("staff-queue");
-      } else {
-        setActiveView("create");
-      }
+      setActiveView(user.isLegacyRequester ? "create" : "dashboard");
     }
   }, [user?.id, user?.role, initialView]);
 
@@ -58,7 +55,8 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
     }
   }
 
-  const handleHeaderViewChange = (view: "create" | "my-tickets" | "staff-queue" | "user-admin") => {
+  const handleHeaderViewChange = (view: ActiveView) => {
+    setDrillDownFilters({});
     setActiveView(view);
     setSelectedTicketId(null);
   };
@@ -121,7 +119,50 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
         className="container py-4 flex-grow-1"
         style={{ maxWidth: activeView === "create" ? 860 : 1320 }}
       >
-        {activeView === "user-admin" && user.role === "ADMINISTRATOR" ? (
+        {activeView === "dashboard" ? (
+          /* Role-Based Dashboard View (Issue 21) */
+          user.role === "REQUESTER" ? (
+            <div className="mb-4">
+              <RequesterDashboard
+                onCreateTicket={() => {
+                  setActiveView("create");
+                  setSelectedTicketId(null);
+                }}
+                onNavigateToMyTickets={(status) => {
+                  setDrillDownFilters(status ? { status } : {});
+                  setActiveView("my-tickets");
+                  setSelectedTicketId(null);
+                }}
+                onViewTicket={(ticketId) => {
+                  setSelectedTicketId(ticketId);
+                  setActiveView("detail");
+                }}
+              />
+            </div>
+          ) : (
+            <div className="mb-4">
+              <StaffDashboard
+                onCreateTicket={() => {
+                  setActiveView("create");
+                  setSelectedTicketId(null);
+                }}
+                onNavigateToQueue={(filters) => {
+                  setDrillDownFilters(filters || {});
+                  setActiveView("staff-queue");
+                  setSelectedTicketId(null);
+                }}
+                onViewTicket={(ticketId) => {
+                  setSelectedTicketId(ticketId);
+                  setActiveView("detail");
+                }}
+                onManageUsers={() => {
+                  setActiveView("user-admin");
+                  setSelectedTicketId(null);
+                }}
+              />
+            </div>
+          )
+        ) : activeView === "user-admin" && user.role === "ADMINISTRATOR" ? (
           /* Administrator User Management View (Issue 15) */
           <div className="mb-4">
             <UserManagement />
@@ -139,6 +180,9 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
           /* IT Staff Ticket Queue View (Issue 13 / Feature 3) */
           <div className="mb-4">
             <StaffTicketQueue
+              initialStatusFilter={drillDownFilters.status}
+              initialOwnerFilter={drillDownFilters.owner}
+              initialPriorityFilter={drillDownFilters.itPriority}
               onViewTicket={(ticketId) => {
                 setSelectedTicketId(ticketId);
                 setActiveView("detail");
@@ -170,6 +214,7 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
           /* My Tickets View (Feature 8 / Feature 4) */
           <div className="mb-4">
             <MyTickets
+              initialStatusFilter={drillDownFilters.status}
               onCreateTicket={() => setActiveView("create")}
               onViewTicket={(ticketId) => {
                 setSelectedTicketId(ticketId);

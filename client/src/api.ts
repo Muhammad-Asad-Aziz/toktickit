@@ -1117,3 +1117,125 @@ export async function updateActionTaken(
   }
   return data;
 }
+
+
+// ---------------------------------------------------------------------------
+// Issue 21: Role-Based Dashboards & Drill-Downs
+// ---------------------------------------------------------------------------
+
+export interface RequesterDashboardMetrics {
+  totalOpen: number;
+  openTicketsCount: number;
+  waitingForRequester: number;
+  waitingForRequesterCount: number;
+  inProgress: number;
+  resolved: number;
+  closed: number;
+  recentlyResolvedCount: number;
+}
+
+export interface DashboardTicketSummary {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  currentStatus: string;
+  requestedPriority?: string;
+  itPriority?: string | null;
+  owner?: { id: number; name: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RequesterDashboardData {
+  metrics: RequesterDashboardMetrics;
+  recentlyUpdatedTickets: DashboardTicketSummary[];
+}
+
+export interface StaffDashboardMetrics {
+  newCount: number;
+  openCount: number;
+  inProgressCount: number;
+  waitingForRequesterCount: number;
+  myAssignedCount: number;
+  myOwnedTicketsCount: number;
+  unassignedCount: number;
+  unassignedTicketsCount: number;
+  totalActiveTicketsCount: number;
+  statusCounts: Record<string, number>;
+  priorityCounts: Record<string, number>;
+}
+
+export interface AdminMetrics {
+  totalUsers: number;
+  activeUsers: number;
+  activeUsersCount: number;
+  inactiveUsersCount: number;
+  requestersCount: number;
+  staffCount: number;
+  adminCount: number;
+  usersByRole: Record<string, number>;
+  totalTicketsCount: number;
+}
+
+export interface StaffDashboardData {
+  metrics: StaffDashboardMetrics;
+  recentlyUpdatedTickets: DashboardTicketSummary[];
+}
+
+export interface AdminDashboardData {
+  staffMetrics: StaffDashboardMetrics;
+  metrics: StaffDashboardMetrics;
+  adminMetrics: AdminMetrics;
+  recentlyUpdatedTickets: DashboardTicketSummary[];
+}
+
+export async function fetchRequesterDashboard(): Promise<RequesterDashboardData> {
+  const res = await fetch(`${API_URL}/api/v1/dashboards/requester`, {
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error: any = new Error(
+      data.error?.message || `Failed to fetch requester dashboard (${res.status})`
+    );
+    error.code = data.error?.code;
+    error.status = res.status;
+    throw error;
+  }
+  return data;
+}
+
+export async function fetchStaffDashboard(): Promise<StaffDashboardData> {
+  const res = await fetch(`${API_URL}/api/v1/dashboards/staff`, {
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error: any = new Error(
+      data.error?.message || `Failed to fetch staff dashboard (${res.status})`
+    );
+    error.code = data.error?.code;
+    error.status = res.status;
+    throw error;
+  }
+  return data;
+}
+
+export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
+  const res = await fetch(`${API_URL}/api/v1/dashboards/admin`, {
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error: any = new Error(
+      data.error?.message || `Failed to fetch admin dashboard (${res.status})`
+    );
+    error.code = data.error?.code;
+    error.status = res.status;
+    throw error;
+  }
+  return data;
+}

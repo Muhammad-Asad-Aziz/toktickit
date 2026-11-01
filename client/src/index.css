@@ -688,3 +688,81 @@ html, body {
   }
 }
 
+
+
+/* ==========================================================================
+   Issue 21: Role-Based Dashboards & Drill-Downs (Zen Green Styling)
+   ========================================================================== */
+.dashboard-kpi-card {
+  background-color: var(--zen-surface, #ffffff);
+  border: 1px solid var(--zen-border-neutral, #D1D5DB);
+  border-radius: var(--zen-border-radius-lg, 10px);
+  padding: 1.25rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 107, 60, 0.08);
+}
+
+.dashboard-kpi-number {
+  font-size: var(--zen-font-size-kpi, 32px);
+  font-weight: 700;
+  color: var(--zen-primary-green, #006B3C);
+  line-height: 1.1;
+}
+
+.dashboard-kpi-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--zen-text-muted, #5B6573);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.dashboard-drilldown-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--zen-secondary-green, #0B7A46);
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.dashboard-drilldown-link:hover {
+  text-decoration: underline;
+  color: var(--zen-primary-green, #006B3C);
+}
+
+.dashboard-status-badge-btn {
+  cursor: pointer;
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  background: none;
+}
+
+.dashboard-status-badge-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-refresh-btn {
+  color: var(--zen-primary-green, #006B3C);
+  border-color: var(--zen-border-neutral, #D1D5DB);
+}
+
+.dashboard-refresh-btn:hover {
+  background-color: var(--zen-pale-green, #EAF6EF);
+  color: var(--zen-secondary-green, #0B7A46);
+}
