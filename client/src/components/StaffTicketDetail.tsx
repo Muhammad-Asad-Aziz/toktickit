@@ -78,6 +78,18 @@ export default function StaffTicketDetail({
   const [isSubmittingNote, setIsSubmittingNote] = useState<boolean>(false);
   const [noteError, setNoteError] = useState<string | null>(null);
 
+  // Keyboard accessibility: Escape key modal dismissal (WCAG 2.1 AA)
+  useEffect(() => {
+    if (!showCancelModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isUpdatingStatus) {
+        setShowCancelModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showCancelModal, isUpdatingStatus]);
+
   const loadTicketData = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -168,6 +180,7 @@ export default function StaffTicketDetail({
                 ? { id: res.owner.id, name: res.owner.name, email: res.owner.email, role: res.owner.role }
                 : null,
               ticketOwner: res.owner?.name || null,
+              updatedAt: (res as any).updatedAt || prev.updatedAt,
             }
           : null
       );
@@ -194,8 +207,8 @@ export default function StaffTicketDetail({
     setErrorMessage(null);
     setSuccessMessage(null);
     try {
-      await updateTicketPriority(ticket.id, selectedPriority);
-      setTicket((prev) => (prev ? { ...prev, itPriority: selectedPriority } : null));
+      const res = await updateTicketPriority(ticket.id, selectedPriority);
+      setTicket((prev) => (prev ? { ...prev, itPriority: selectedPriority, updatedAt: (res as any)?.updatedAt || prev.updatedAt } : null));
       setSuccessMessage("IT priority updated successfully.");
     } catch (err: unknown) {
       const error = err as Error;
