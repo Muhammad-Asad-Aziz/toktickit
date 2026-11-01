@@ -22,13 +22,13 @@ interface StaffTicketDetailProps {
 }
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  NEW: ["OPEN", "CANCELLED"],
-  OPEN: ["IN_PROGRESS", "WAITING_FOR_REQUESTER", "CANCELLED"],
+  NEW: ["OPEN", "IN_PROGRESS", "CANCELLED"],
+  OPEN: ["IN_PROGRESS", "WAITING_FOR_REQUESTER", "RESOLVED", "CANCELLED"],
   IN_PROGRESS: ["WAITING_FOR_REQUESTER", "RESOLVED", "CANCELLED"],
-  WAITING_FOR_REQUESTER: ["IN_PROGRESS", "RESOLVED"],
+  WAITING_FOR_REQUESTER: ["IN_PROGRESS", "RESOLVED", "CANCELLED"],
   RESOLVED: ["CLOSED", "REOPENED"],
-  CLOSED: ["REOPENED"],
-  REOPENED: ["IN_PROGRESS", "CANCELLED"],
+  CLOSED: [],
+  REOPENED: ["IN_PROGRESS", "RESOLVED", "CANCELLED"],
   CANCELLED: [],
 };
 
@@ -63,6 +63,11 @@ export default function StaffTicketDetail({
 
   const [selectedNextStatus, setSelectedNextStatus] = useState<string>("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false);
+  const [actionsCount, setActionsCount] = useState<number>(0);
+  const [concurrencyConflict, setConcurrencyConflict] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
+  const [cancellationReason, setCancellationReason] = useState<string>("");
+  const [cancellationError, setCancellationError] = useState<string | null>(null);
 
   // Comment & Note form state
   const [commentContent, setCommentContent] = useState<string>("");
@@ -88,6 +93,9 @@ export default function StaffTicketDetail({
       const currentStatus = ticketData.currentStatus || "NEW";
       const allowed = ALLOWED_TRANSITIONS[currentStatus] || [];
       setSelectedNextStatus(allowed.length > 0 ? allowed[0] : "");
+      if ((ticketData as any).actionsTaken) {
+        setActionsCount((ticketData as any).actionsTaken.length);
+      }
     } catch (err: unknown) {
       const error = err as Error;
       setErrorMessage(error.message || "Failed to load staff ticket details");
@@ -95,6 +103,26 @@ export default function StaffTicketDetail({
       setIsLoading(false);
     }
   }, [ticketId]);
+
+  const handleReloadPreservingDrafts = async () => {
+    setConcurrencyConflict(null);
+    setErrorMessage(null);
+    try {
+      const ticketData = await fetchStaffTicketDetail(ticketId);
+      setTicket(ticketData);
+      setSelectedOwnerId(ticketData.ownerId ? String(ticketData.ownerId) : "");
+      setSelectedPriority(ticketData.itPriority || "MEDIUM");
+      const currentStatus = ticketData.currentStatus || "NEW";
+      const allowed = ALLOWED_TRANSITIONS[currentStatus] || [];
+      setSelectedNextStatus(allowed.length > 0 ? allowed[0] : "");
+      if ((ticketData as any).actionsTaken) {
+        setActionsCount((ticketData as any).actionsTaken.length);
+      }
+    } catch (err: unknown) {
+      const error = err as Error;
+      setErrorMessage(error.message || "Failed to reload ticket data");
+    }
+  };
 
   useEffect(() => {
     loadTicketData();
@@ -180,27 +208,92 @@ export default function StaffTicketDetail({
   // 4. Transition Status Handler
   const handleTransitionStatus = async () => {
     if (!ticket || !selectedNextStatus) return;
+    if (selectedNextStatus === "CANCELLED") {
+      setCancellationReason("");
+      setCancellationError(null);
+      setShowCancelModal(true);
+      return;
+    }
     setIsUpdatingStatus(true);
     setErrorMessage(null);
     setSuccessMessage(null);
+    setConcurrencyConflict(null);
     try {
-      await transitionTicketStatus(ticket.id, selectedNextStatus);
-      const newStatus = selectedNextStatus;
+      const res = await transitionTicketStatus(ticket.id, {
+        status: selectedNextStatus,
+        versionTimestamp: ticket.updatedAt,
+      });
+      const newStatus = res.ticket?.currentStatus || selectedNextStatus;
+      const newUpdatedAt = res.ticket?.updatedAt || ticket.updatedAt;
       setTicket((prev) =>
         prev
           ? {
               ...prev,
               currentStatus: newStatus,
               status: newStatus,
+              updatedAt: newUpdatedAt,
             }
           : null
       );
       const allowed = ALLOWED_TRANSITIONS[newStatus] || [];
       setSelectedNextStatus(allowed.length > 0 ? allowed[0] : "");
       setSuccessMessage(`Ticket transitioned to ${newStatus}.`);
-    } catch (err: unknown) {
-      const error = err as Error;
-      setErrorMessage(error.message || "Failed to transition ticket status.");
+    } catch (err: any) {
+      if (err.status === 409 || err.code === "STALE_RECORD_CONFLICT") {
+        setConcurrencyConflict(
+          err.message || "The ticket was modified by another user. Please reload the ticket to view the latest state."
+        );
+      } else {
+        setErrorMessage(err.message || "Failed to transition ticket status.");
+      }
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleConfirmCancellation = async () => {
+    if (!ticket) return;
+    if (cancellationReason.trim().length < 5) {
+      setCancellationError("Cancellation reason must be at least 5 characters.");
+      return;
+    }
+    setIsUpdatingStatus(true);
+    setCancellationError(null);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setConcurrencyConflict(null);
+    try {
+      const res = await transitionTicketStatus(ticket.id, {
+        status: "CANCELLED",
+        cancellationReason: cancellationReason.trim(),
+        versionTimestamp: ticket.updatedAt,
+      });
+      const newStatus = res.ticket?.currentStatus || "CANCELLED";
+      const newUpdatedAt = res.ticket?.updatedAt || ticket.updatedAt;
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              currentStatus: newStatus,
+              status: newStatus,
+              updatedAt: newUpdatedAt,
+            }
+          : null
+      );
+      const allowed = ALLOWED_TRANSITIONS[newStatus] || [];
+      setSelectedNextStatus(allowed.length > 0 ? allowed[0] : "");
+      setSuccessMessage(`Ticket transitioned to ${newStatus}.`);
+      setShowCancelModal(false);
+      setCancellationReason("");
+    } catch (err: any) {
+      if (err.status === 409 || err.code === "STALE_RECORD_CONFLICT") {
+        setShowCancelModal(false);
+        setConcurrencyConflict(
+          err.message || "The ticket was modified by another user. Please reload the ticket to view the latest state."
+        );
+      } else {
+        setCancellationError(err.message || "Failed to cancel ticket.");
+      }
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -322,6 +415,26 @@ export default function StaffTicketDetail({
         <div className="alert alert-danger alert-dismissible fade show mb-4" role="alert">
           <span>⚠️ {errorMessage}</span>
           <button type="button" className="btn-close" onClick={() => setErrorMessage(null)} aria-label="Close" />
+        </div>
+      )}
+
+      {concurrencyConflict && (
+        <div
+          className="alert alert-warning alert-dismissible fade show mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2"
+          role="alert"
+          data-testid="concurrency-conflict-banner"
+        >
+          <div>
+            <strong>⚠️ Update Conflict:</strong> {concurrencyConflict}
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline-dark btn-sm"
+            onClick={handleReloadPreservingDrafts}
+            data-testid="reload-ticket-btn"
+          >
+            🔄 Reload Ticket Data
+          </button>
         </div>
       )}
 
@@ -581,7 +694,7 @@ export default function StaffTicketDetail({
               </div>
 
               {allowedNextStatuses.length === 0 ? (
-                <div className="alert alert-secondary py-2 px-3 small mb-0">
+                <div className="alert alert-secondary py-2 px-3 small mb-0" data-testid="terminal-status-notice">
                   Terminal status reached ({ticket.currentStatus}). No further transitions permitted.
                 </div>
               ) : (
@@ -605,11 +718,24 @@ export default function StaffTicketDetail({
                     </select>
                   </div>
 
+                  {selectedNextStatus === "RESOLVED" && actionsCount === 0 && (
+                    <div
+                      className="alert alert-warning py-2 px-3 small mb-3"
+                      data-testid="resolution-blocked-warning"
+                    >
+                      ⚠️ <strong>Resolution Blocked:</strong> You must log at least one Action Taken before this ticket can be resolved.
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     className="btn btn-zen-primary btn-sm px-3"
                     onClick={handleTransitionStatus}
-                    disabled={isUpdatingStatus || !selectedNextStatus}
+                    disabled={
+                      isUpdatingStatus ||
+                      !selectedNextStatus ||
+                      (selectedNextStatus === "RESOLVED" && actionsCount === 0)
+                    }
                     data-testid="transition-status-btn"
                   >
                     {isUpdatingStatus ? "Transitioning…" : `Transition to ${selectedNextStatus}`}
@@ -628,6 +754,7 @@ export default function StaffTicketDetail({
             ticketId={ticket.id}
             readOnly={false}
             currentUser={currentUser}
+            onActionsChanged={(actions) => setActionsCount(actions.length)}
           />
         </div>
       </div>
@@ -832,6 +959,79 @@ export default function StaffTicketDetail({
           </div>
         </div>
       </div>
+
+      {/* Cancellation Reason Modal Dialog */}
+      {showCancelModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          data-testid="cancellation-reason-modal"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow">
+              <div className="modal-header bg-white border-bottom">
+                <h5 className="modal-title h6 fw-bold mb-0">Confirm Ticket Cancellation</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={isUpdatingStatus}
+                  aria-label="Close"
+                />
+              </div>
+              <div className="modal-body p-4">
+                <p className="small text-muted mb-3">
+                  Please provide a reason for cancelling this ticket. This reason will be recorded in the audit trail.
+                </p>
+                {cancellationError && (
+                  <div className="alert alert-danger py-2 px-3 small mb-3" data-testid="cancellation-error">
+                    {cancellationError}
+                  </div>
+                )}
+                <div className="mb-3">
+                  <label htmlFor="cancellation-reason-input" className="form-label small fw-semibold text-muted">
+                    Cancellation Reason <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    id="cancellation-reason-input"
+                    className="form-control"
+                    rows={3}
+                    placeholder="Provide reason for cancelling ticket (min 5 characters)..."
+                    value={cancellationReason}
+                    onChange={(e) => setCancellationReason(e.target.value)}
+                    data-testid="cancellation-reason-textarea"
+                  />
+                  <div className="form-text small text-muted">
+                    {cancellationReason.trim().length} / 1000 characters (min 5)
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer bg-light border-top">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={isUpdatingStatus}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  onClick={handleConfirmCancellation}
+                  disabled={isUpdatingStatus || cancellationReason.trim().length < 5}
+                  data-testid="confirm-cancellation-btn"
+                >
+                  {isUpdatingStatus ? "Cancelling..." : "Confirm Cancellation"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
