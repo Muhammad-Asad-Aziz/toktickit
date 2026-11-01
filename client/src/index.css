@@ -501,3 +501,190 @@ html, body {
   gap: 10px;
 }
 
+
+
+/* ============================================================================
+   Actions Taken Subsystem (Sprint 4 / Issue 19)
+   ============================================================================ */
+
+/* Action Taken Item Card */
+.action-taken-card {
+  background-color: var(--zen-surface);
+  border: 1px solid var(--zen-border-neutral);
+  border-left: 4px solid var(--zen-secondary-green);
+  border-radius: var(--zen-border-radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.action-taken-card:hover {
+  border-color: var(--zen-secondary-green);
+  box-shadow: 0 3px 8px rgba(0, 107, 60, 0.08);
+}
+
+/* Follow-up Note Callout Container */
+.action-followup-callout {
+  background-color: var(--zen-warning-bg);
+  border: 1px solid #FDE68A;
+  border-left: 4px solid var(--zen-warning-border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  color: #92400E;
+}
+
+/* Modal Dialog Styles */
+.action-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(28, 40, 38, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.action-modal-dialog {
+  background-color: var(--zen-surface);
+  border: 1px solid var(--zen-border-neutral);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Performer Attribution Card in Form */
+.performer-display-card {
+  background-color: var(--zen-field-readonly-bg);
+  border: 1px solid var(--zen-border-neutral);
+  border-radius: var(--zen-border-radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+/* Loading Skeletons */
+.action-skeleton {
+  background: linear-gradient(90deg, #EAF6EF 25%, #F0F4F1 50%, #EAF6EF 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Empty State Container */
+.action-empty-state {
+  border: 2px dashed var(--zen-border-neutral);
+  background-color: #FAFCFA;
+  border-radius: var(--zen-border-radius);
+  padding: 32px 20px;
+  text-align: center;
+}
+
+/* Mobile Viewport Stacking */
+@media (max-width: 767.98px) {
+  .action-taken-card {
+    padding: 14px 14px;
+  }
+  .action-modal-dialog {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 8px;
+  }
+}
+
+/* ==========================================================================
+   Responsive Header UX Styles (Good Mobile/Tablet UX/UI Protocols)
+   ========================================================================== */
+.app-header-root {
+  min-height: 56px;
+}
+
+.app-header-brand {
+  order: 1;
+}
+
+.app-header-user {
+  order: 2;
+  margin-left: auto;
+}
+
+.user-name-display-truncate {
+  max-width: 110px;
+}
+
+@media (min-width: 576px) {
+  .user-name-display-truncate {
+    max-width: 180px;
+  }
+}
+
+.header-logout-btn {
+  font-weight: 500;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.header-logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+/* On Mobile & Tablet (< 992px): dedicated full-width navigation bar */
+.app-header-nav {
+  order: 3;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  gap: 0.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.app-header-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.header-nav-tab {
+  white-space: nowrap;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  padding: 0.35rem 0.75rem;
+}
+
+/* On phones (< 576px): distribute nav tabs evenly as a native tab control */
+@media (max-width: 575.98px) {
+  .header-nav-tab {
+    flex: 1 1 0;
+    text-align: center;
+    padding: 0.35rem 0.25rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* On Desktop (>= 992px): navigation integrates seamlessly inline between brand and user */
+@media (min-width: 992px) {
+  .app-header-nav {
+    order: 2;
+    width: auto;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    margin-left: 1.25rem;
+    margin-right: auto;
+    gap: 0.5rem;
+  }
+  .app-header-user {
+    order: 3;
+  }
+}
+
