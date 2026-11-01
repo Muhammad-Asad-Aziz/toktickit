@@ -1,8 +1,8 @@
 # Lab 4 — Peer Review Record
 
 **Course**: CPE 334 Introduction to Software Engineering in the Age of AI Agents (Semester 1/2026)  
-**Author:** Muhammad Asad Aziz — 67070503472 — GitHub: @Muhammad-Asad-Aziz  
-**Peer Reviewer:** Al Xander James Codino Ybanez — 67070503450 — GitHub: @ShortXander101205  
+**Author:** Muhammad Asad Aziz — 67070503472 — GitHub: [@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz)  
+**Peer Reviewer:** Al Xander James Codino Ybanez — 67070503450 — GitHub: [@ShortXander101205](https://github.com/ShortXander101205)  
 
 ---
 
@@ -12,52 +12,50 @@ Repository: [`Muhammad-Asad-Aziz/toktickit`](https://github.com/Muhammad-Asad-Az
 
 | PR # | Feature Branch | Target Branch | Linked Issue | Reviewer Verdict | Merged By |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| [#41](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/41) | `feature/17-spec-and-tests` | `lab4-staging` | Issue 17: Sprint 4 Engineering Contract & Software Test Planning | Approved | @ShortXander101205 |
-| [#42](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/42) | `feature/18-actions-taken-foundation` | `lab4-staging` | Issue 18: Actions Taken Data Model, Migration, Seed & Core APIs | Approved | @ShortXander101205 |
-| [#43](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/43) | `feature/19-actions-taken-ui` | `lab4-staging` | Issue 19: Actions Taken UI & Ticket Detail Integration | Changes Requested $\rightarrow$ Approved | @ShortXander101205 |
-| [#44](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/44) | `feature/20-ticket-workflow` | `lab4-staging` | Issue 20: Ticket Workflow State Machine & Resolution Gate | Approved | @ShortXander101205 |
-| [#45](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/45) | `feature/21-role-dashboards` | `lab4-staging` | Issue 21: Role-Appropriate Dashboards (Requester, Staff, Admin) | Approved | @ShortXander101205 |
-| [#46](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/46) | `feature/22-regression-polish-release` | `lab4-staging` | Issue 22: End-to-End Regression, Accessibility Polish & Staged Release Integration | Approved | @ShortXander101205 |
+| [#47](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/47) | `feature/17-spec-and-tests` | `lab4-staging` | [Issue 17 (Issue #39)](https://github.com/Muhammad-Asad-Aziz/toktickit/issues/39): Sprint 4 Engineering Contract & Software Test Planning | Approved | @ShortXander101205 |
+| [#48](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/48) | `feature/18-actions-taken-foundation` | `lab4-staging` | [Issue 18 (Issue #40)](https://github.com/Muhammad-Asad-Aziz/toktickit/issues/40): Actions Taken Data Model, Migration, Seed Data & Backend APIs | Approved | @ShortXander101205 |
+| [#49](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/49) | `feature/19-actions-taken-ui` | `lab4-staging` | [Issue 19 (Issue #41)](https://github.com/Muhammad-Asad-Aziz/toktickit/issues/41): Actions Taken UI, Ticket Detail Integration & Access Control | Approved | @ShortXander101205 |
+| [#50](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/50) | `feature/20-ticket-workflow` | `lab4-staging` | [Issue 20 (Issue #42)](https://github.com/Muhammad-Asad-Aziz/toktickit/issues/42): Ticket Status Lifecycle, Concurrency & Resolution Gate | Approved | @ShortXander101205 |
+| [#51](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/51) | `feature/21-role-dashboards` | `lab4-staging` | [Issue 21 (Issue #43)](https://github.com/Muhammad-Asad-Aziz/toktickit/issues/43): Role-Based Dashboards (Requester, IT Staff & Admin) & Drill-Downs | Approved | @ShortXander101205 |
+| [#52](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/52) | `feature/22-regression-polish-release` | `lab4-staging` | [Issue 22 (Issue #44)](https://github.com/Muhammad-Asad-Aziz/toktickit/issues/44): Final Regression, Accessibility, E2E Polish & Staged Release Verification | Approved | @ShortXander101205 |
 
-### Reviewer Comments Received & Author Responses
+### Reviewer Comments Received & Author Responses (from GitHub)
 
-#### Issue 17: Sprint 4 Engineering Contract & Software Test Planning (PR #41)
-* **Reviewer Comment ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > "Comprehensive specification suite covering Actions Taken data integrity, resolution gate rules, and role dashboard requirements. Test catalog clearly distinguishes unit assertions from Playwright screenshot evidence under artifacts/."
-* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz))**:
-  > "Thank you! Preserving strict separation between functional test assertions and visual screenshot artifacts was our key priority."
+#### Issue 17: Sprint 4 Engineering Contract & Software Test Planning (PR #47)
+* **Reviewer Comment ([@ShortXander101205](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/47#issuecomment-6541923207))**:
+  > "Lab 4 foundation set accordingly."
+* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/47#issuecomment-6541924967))**:
+  > "Thank you for reviewing"
 
-#### Issue 18: Actions Taken Data Model, Migration, Seed & Core APIs (PR #42)
-* **Reviewer Comment ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > "Prisma schema includes ActionTaken model with onDelete: Cascade and composite indexes. API endpoints enforce 403 on requester write attempts and auto-populate performedById from session."
-* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz))**:
-  > "Thanks for verifying the performer audit trail safety!"
+#### Issue 18: Actions Taken Data Model, Migration, Seed & Core APIs (PR #48)
+* **Reviewer Comment ([@ShortXander101205](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/48#issuecomment-6542190726))**:
+  > "Issue 18 backend implementations completed. All seems to be working well."
+* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/48#issuecomment-6542193270))**:
+  > "Thanks a lot"
 
-#### Issue 19: Actions Taken UI & Ticket Detail Integration (PR #43)
-* **Reviewer Comment ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > "Actions Taken renders nicely on desktop, but on mobile viewports (< 768px), the action metadata badges overflowed slightly. Please verify responsive wrapping."
-* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz))**:
-  > "Added `flex-wrap gap-2` and fluid widths on the metadata containers in `ActionsTakenSection.tsx`. Tested across 375px mobile viewports; screenshots updated."
-* **Reviewer Follow-up ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > "Mobile layout looks great now. Verified in Playwright; ready to merge."
+#### Issue 19: Actions Taken UI & Ticket Detail Integration (PR #49)
+* **Reviewer Comment ([@ShortXander101205](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/49#issuecomment-6545435641))**:
+  > "I have checked the UI for the new Actions Taken, all the UI made looks good and I have tested them. Everything looks good for this feature."
+* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/49#issuecomment-6545555735))**:
+  > "Thank you so much for reviewing!"
 
-#### Issue 20: Ticket Workflow State Machine & Resolution Gate (PR #44)
-* **Reviewer Comment ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > "Tested premature resolution blocking when 0 actions exist; both the frontend warning and backend 400 Bad Request behave correctly. OCC 409 conflict handling cleanly preserves uncommitted drafts."
-* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz))**:
-  > "Appreciate your thorough verification on the optimistic concurrency edge case!"
+#### Issue 20: Ticket Workflow State Machine & Resolution Gate (PR #50)
+* **Reviewer Comment ([@ShortXander101205](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/50#issuecomment-6554335302))**:
+  > "Manual testing with the new features worked, all testing passed according to the API routes. Everything is all good."
+* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/50#issuecomment-6554361166))**:
+  > "Thanks so much for reviewing!"
 
-#### Issue 21: Role-Appropriate Dashboards (Requester, Staff, Admin) (PR #45)
-* **Reviewer Comment ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > "Dashboard metrics properly isolate Requester tickets, Staff operational queues, and Admin account tallies. 1-click drill-downs maintain filter parameters cleanly upon navigation."
-* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz))**:
-  > "Thanks! The drill-downs utilize React state routing with query params to make navigation seamless."
+#### Issue 21: Role-Appropriate Dashboards (Requester, Staff, Admin) (PR #51)
+* **Reviewer Comment ([@ShortXander101205](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/51#issuecomment-6555124915))**:
+  > "All the dashboard features work properly, I have done manual testing as well, and testing went smoothly without any issues. This issue is all done, and well made."
+* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/51#issuecomment-6555135161))**:
+  > "Thanks a lot for reviewing"
 
-#### Issue 22: End-to-End Regression, Accessibility Polish & Staged Release Integration (PR #46)
-* **Reviewer Comment ([@ShortXander101205](https://github.com/ShortXander101205))**:
-  > "All 17 server test files (149 tests), 14 client suites (97 tests), and all 9 Playwright E2E suites passed cleanly. WCAG 2.1 AA focus rings, skip links, and Escape modal dismissals verified. Approved for release."
-* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz))**:
-  > "Thank you for the review and collaboration throughout Sprint 4! All quality gates passed."
+#### Issue 22: End-to-End Regression, Accessibility Polish & Staged Release Integration (PR #52)
+* **Reviewer Comment ([@ShortXander101205](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/52#issuecomment-6556179749))**:
+  > "Great time working with you for lab 4, I approve of the final implements."
+* **Author Response ([@Muhammad-Asad-Aziz](https://github.com/Muhammad-Asad-Aziz/toktickit/pull/52#issuecomment-6556198786))**:
+  > "Thanks so much for helping me with lab 4!"
 
 ---
 
@@ -67,49 +65,47 @@ Peer Repository: [`ShortXander101205/toktickit`](https://github.com/ShortXander1
 
 | PR # | Feature Branch | Target Branch | Linked Issue | Review Verdict | Merged By |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| [#38](https://github.com/ShortXander101205/toktickit/pull/38) | `feature/17-spec-and-tests` | `lab4-staging` | Issue 17: Sprint 4 Engineering Contract & Software Test Planning | Approved | @Muhammad-Asad-Aziz |
-| [#39](https://github.com/ShortXander101205/toktickit/pull/39) | `feature/18-actions-taken-foundation` | `lab4-staging` | Issue 18: Actions Taken Data Model, Migration, Seed & Core APIs | Changes Requested $\rightarrow$ Approved | @Muhammad-Asad-Aziz |
-| [#40](https://github.com/ShortXander101205/toktickit/pull/40) | `feature/19-actions-taken-ui` | `lab4-staging` | Issue 19: Actions Taken UI & Ticket Detail Integration | Approved | @Muhammad-Asad-Aziz |
-| [#41](https://github.com/ShortXander101205/toktickit/pull/41) | `feature/20-ticket-workflow` | `lab4-staging` | Issue 20: Ticket Workflow State Machine & Resolution Gate | Approved | @Muhammad-Asad-Aziz |
-| [#42](https://github.com/ShortXander101205/toktickit/pull/42) | `feature/21-role-dashboards` | `lab4-staging` | Issue 21: Role-Appropriate Dashboards (Requester, Staff, Admin) | Approved | @Muhammad-Asad-Aziz |
-| [#43](https://github.com/ShortXander101205/toktickit/pull/43) | `feature/22-regression-polish-release` | `lab4-staging` | Issue 22: End-to-End Regression, Accessibility Polish & Staged Release Integration | Approved | @Muhammad-Asad-Aziz |
+| [#47](https://github.com/ShortXander101205/toktickit/pull/47) | `feature/17-spec-and-tests` | `lab4-staging` | [Issue 17 (Issue #41)](https://github.com/ShortXander101205/toktickit/issues/41): Sprint 4 Engineering Contract & Software Test Planning | Approved | @Muhammad-Asad-Aziz |
+| [#48](https://github.com/ShortXander101205/toktickit/pull/48) | `feature/18-actions-taken-foundation` | `lab4-staging` | [Issue 18 (Issue #42)](https://github.com/ShortXander101205/toktickit/issues/42): Actions Taken Data Model, Migration, Seed Data & Backend APIs | Approved | @Muhammad-Asad-Aziz |
+| [#49](https://github.com/ShortXander101205/toktickit/pull/49) | `feature/19-actions-taken-ui` | `lab4-staging` | [Issue 19 (Issue #43)](https://github.com/ShortXander101205/toktickit/issues/43): Actions Taken UI, Ticket Detail Integration & Access Control | Approved | @Muhammad-Asad-Aziz |
+| [#50](https://github.com/ShortXander101205/toktickit/pull/50) | `feature/20-ticket-workflow` | `lab4-staging` | [Issue 20 (Issue #44)](https://github.com/ShortXander101205/toktickit/issues/44): Ticket Status Lifecycle, Concurrency & Resolution Gate | Approved | @Muhammad-Asad-Aziz |
+| [#51](https://github.com/ShortXander101205/toktickit/pull/51) | `feature/21-role-dashboards` | `lab4-staging` | [Issue 21 (Issue #45)](https://github.com/ShortXander101205/toktickit/issues/45): Role-Based Dashboards (Requester, IT Staff & Admin) & Drill-Downs | Approved | @Muhammad-Asad-Aziz |
+| [#52](https://github.com/ShortXander101205/toktickit/pull/52) | `feature/22-regression-polish-release` | `lab4-staging` | [Issue 22 (Issue #46)](https://github.com/ShortXander101205/toktickit/issues/46): Final Regression, Accessibility, E2E Polish & Staged Release Verification | Approved | @Muhammad-Asad-Aziz |
 
-### My Review Comments & Peer Responses
+### My Review Comments & Peer Responses (from GitHub)
 
-#### Issue 17: Sprint 4 Engineering Contract & Software Test Planning
-* **My Comment**:
-  > "Contracts are detailed and align with Lab 4 labsheet requirements. Traceability matrices for BR-01 through BR-14 are clearly documented."
-* **Peer Response**:
-  > "Thanks for checking the contract mapping!"
+#### Issue 17: Sprint 4 Engineering Contract & Software Test Planning (PR #47)
+* **My Review Comment ([@Muhammad-Asad-Aziz](https://github.com/ShortXander101205/toktickit/pull/47#pullrequestreview-5694766550))**:
+  > "I have verified and approved the merge. The authoritative engineering contract files are fully authored and aligned with Sprint 4 requirements."
+* **Peer Response ([@ShortXander101205](https://github.com/ShortXander101205/toktickit/pull/47#issuecomment-6491780287))**:
+  > "Thank you for checking the foundations."
 
-#### Issue 18: Actions Taken Data Model, Migration, Seed & Core APIs
-* **My Comment**:
-  > "Prisma schema looks solid, but running seed caused a foreign key error when seeding actions for unseeded ticket IDs. Please ensure seed runs sequentially after tickets are committed."
-* **Peer Response**:
-  > "Fixed the seed execution order in `prisma/seed.ts` so ticket IDs are resolved before creating actions. Re-tested with clean migration reset."
-* **My Follow-up**:
-  > "Re-ran seed and automated tests; all 15 actions-taken API tests passed. Approved!"
+#### Issue 18: Actions Taken Data Model, Migration, Seed & Core APIs (PR #48)
+* **My Review Comment ([@Muhammad-Asad-Aziz](https://github.com/ShortXander101205/toktickit/pull/48#pullrequestreview-5722345875))**:
+  > "I have verified and approved the merge of feature/18. The backend foundation for Actions Taken is fully implemented and tested according to sprint specifications, doing manual testing also worked."
+* **Peer Response ([@ShortXander101205](https://github.com/ShortXander101205/toktickit/pull/48#issuecomment-6542207455))**:
+  > "Thank you so much for the detailed review."
 
-#### Issue 19: Actions Taken UI & Ticket Detail Integration
-* **My Comment**:
-  > "The Actions Taken card and modal render properly in Zen Green styling. Modal disables background scrolling and properly displays the auto-performer card for staff."
-* **Peer Response**:
-  > "Thanks! Also verified that Requester views strictly hide the '+ Log Action Taken' button."
+#### Issue 19: Actions Taken UI & Ticket Detail Integration (PR #49)
+* **My Review Comment ([@Muhammad-Asad-Aziz](https://github.com/ShortXander101205/toktickit/pull/49#pullrequestreview-5723598831))**:
+  > "I have verified and approved the merge of feature/19. The frontend implementation for Actions Taken is fully delivered. IT Staff and Administrators have full access to create and edit actions with auto-populated performer identity and conditional follow-up validation, while Requesters are restricted to view-only access with all mutation controls suppressed. Manual testing confirms this."
+* **Peer Response ([@ShortXander101205](https://github.com/ShortXander101205/toktickit/pull/49#issuecomment-6545573619))**:
+  > "Thank you for the kind review"
 
-#### Issue 20: Ticket Workflow State Machine & Resolution Gate
-* **My Comment**:
-  > "Verified that resolution gate prevents transition to RESOLVED when zero actions are logged. Optimistic concurrency control correctly rejects stale timestamps with 409 Conflict."
-* **Peer Response**:
-  > "Glad the OCC logic and conflict recovery UI tested cleanly!"
+#### Issue 20: Ticket Workflow State Machine & Resolution Gate (PR #50)
+* **My Review Comment ([@Muhammad-Asad-Aziz](https://github.com/ShortXander101205/toktickit/pull/50#pullrequestreview-5726737023))**:
+  > "I have verified and approved the merge of feature/20. The ticket status lifecycle and concurrency controls are fully implemented according to specifications. Tickets can't be set to Resolved if no action taken comments were made, but can if it is. Concurrency simulation has also passed as setting the same tickets status will bring a 409 error."
+* **Peer Response ([@ShortXander101205](https://github.com/ShortXander101205/toktickit/pull/50#issuecomment-6554362720))**:
+  > "Thank you for the review and testing done, I appreciate it."
 
-#### Issue 21: Role-Appropriate Dashboards (Requester, Staff, Admin)
-* **My Comment**:
-  > "Dashboard cards display accurate aggregates. Clicking metric cards correctly filters queues and tickets. Safe empty state fallbacks handle users with 0 tickets without errors."
-* **Peer Response**:
-  > "Thank you for verifying the zero-ticket edge case!"
+#### Issue 21: Role-Appropriate Dashboards (Requester, Staff, Admin) (PR #51)
+* **My Review Comment ([@Muhammad-Asad-Aziz](https://github.com/ShortXander101205/toktickit/pull/51#pullrequestreview-5727017032))**:
+  > "I have verified and approved the merge of feature/21. The role-based operational dashboards and query infrastructure are fully delivered in compliance with specifications. Manual testing shows the dashboards, and cards, and backend API calls are present."
+* **Peer Response ([@ShortXander101205](https://github.com/ShortXander101205/toktickit/pull/51#issuecomment-6555138071))**:
+  > "I appreciate the manual checks you have done!!!"
 
-#### Issue 22: End-to-End Regression, Accessibility Polish & Staged Release Integration
-* **My Comment**:
-  > "Executed full regression across server, client, and Playwright E2E suites. Focus-visible styles, skip links, and viewport responsiveness look clean on all screen sizes. Ready for staging release merge."
-* **Peer Response**:
-  > "Thank you for the review! Merging into lab4-staging and staging release into main."
+#### Issue 22: End-to-End Regression, Accessibility Polish & Staged Release Integration (PR #52)
+* **My Review Comment ([@Muhammad-Asad-Aziz](https://github.com/ShortXander101205/toktickit/pull/52#pullrequestreview-5727402032))**:
+  > "I have verified and approved the merge of feature/22. The final integration slice for Sprint 4 achieves 100% test coverage with zero regressions across the entire full-stack regression pipeline."
+* **Peer Response ([@ShortXander101205](https://github.com/ShortXander101205/toktickit/pull/52#issuecomment-6556220711))**:
+  > "Thank you with working on Lab 4, I appreciate all the work. Thanks bro!!!!!!!!!!!!!!"

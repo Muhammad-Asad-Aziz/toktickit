@@ -5,9 +5,7 @@
 **Status**: Verified Completion Baseline  
 **Project**: TokTickIT — CPE 334 Introduction to Software Engineering in the Age of AI Agents  
 **Target Milestone**: Lab 4 (Sprint 4) Actions Taken, Dashboards, and Final Regression  
-**Author:** Muhammad Asad Aziz — 67070503472  
-**Base Branch**: `lab4-staging`  
-**Active Working Branch**: `feature/22-regression-polish-release`  
+**Author:** Muhammad Asad Aziz — 67070503472    
 **Test Frameworks**: Vitest 2.1.9, Supertest 7.0.0, React Testing Library 16.1.0, Playwright 1.49.1  
 **Database**: PostgreSQL 16 with Prisma ORM 5.22.0  
 **Traceability Reference**: [specification.md](./specification.md), [ui-spec.md](./ui-spec.md), [api-spec.md](./api-spec.md), [Lab_04_labsheet.pdf](../reference/Lab_04_labsheet.pdf) (§10, §14)
@@ -29,9 +27,6 @@ graph TD
     API --> UI
     UI --> E2E
 ```
-
-> [!NOTE]
-> **Auxiliary Playwright Screenshot Rule**: Playwright full-page screenshots are saved strictly to `artifacts/lab-04/screenshots/` (`staff-dashboard/`, `requester-dashboard/`, `actions-taken/`) as auxiliary visual verification evidence for developer review. They are never asserted as functional pass/fail test logic in this test specification.
 
 ---
 
