@@ -2,7 +2,7 @@ import { useAuth } from "../context/AuthContext.js";
 import { Role } from "../types/auth.js";
 
 interface AppHeaderProps {
-  activeView?: "create" | "my-tickets" | "staff-queue" | "user-admin";
+  activeView?: "dashboard" | "create" | "my-tickets" | "staff-queue" | "user-admin";
   onViewChange?: (view: any) => void;
 }
 
@@ -111,6 +111,15 @@ export default function AppHeader({
               <>
                 <button
                   type="button"
+                  className={`btn btn-sm header-nav-tab ${activeView === "dashboard" ? "btn-light fw-bold text-success" : "btn-outline-light text-white"}`}
+                  onClick={() => onViewChange("dashboard")}
+                  data-testid="nav-dashboard"
+                >
+                  Dashboard
+                </button>
+
+                <button
+                  type="button"
                   className={`btn btn-sm header-nav-tab ${activeView === "create" ? "btn-light fw-bold text-success" : "btn-outline-light text-white"}`}
                   onClick={() => onViewChange("create")}
                   data-testid="nav-create-ticket"
@@ -130,6 +139,15 @@ export default function AppHeader({
 
             {user.role === "IT_STAFF" && (
               <>
+                <button
+                  type="button"
+                  className={`btn btn-sm header-nav-tab ${activeView === "dashboard" ? "btn-light fw-bold text-success" : "btn-outline-light text-white"}`}
+                  onClick={() => onViewChange("dashboard")}
+                  data-testid="nav-dashboard"
+                >
+                  Dashboard
+                </button>
+
                 <button
                   type="button"
                   className={`btn btn-sm header-nav-tab ${activeView === "staff-queue" ? "btn-light fw-bold text-success" : "btn-outline-light text-white"}`}
@@ -159,6 +177,15 @@ export default function AppHeader({
 
             {user.role === "ADMINISTRATOR" && (
               <>
+                <button
+                  type="button"
+                  className={`btn btn-sm header-nav-tab ${activeView === "dashboard" ? "btn-light fw-bold text-success" : "btn-outline-light text-white"}`}
+                  onClick={() => onViewChange("dashboard")}
+                  data-testid="nav-dashboard"
+                >
+                  Dashboard
+                </button>
+
                 <button
                   type="button"
                   className={`btn btn-sm header-nav-tab ${activeView === "user-admin" ? "btn-light fw-bold text-success" : "btn-outline-light text-white"}`}

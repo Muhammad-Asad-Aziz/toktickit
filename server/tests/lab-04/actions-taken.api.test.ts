@@ -68,6 +68,9 @@ describe("Issue 18: Actions Taken API Integration Suite", () => {
       where: { ticketNumber: "TKT-2026-00002" },
     });
     zeroActionTicketId = ticket2!.id;
+    await prisma.actionTaken.deleteMany({
+      where: { ticketId: zeroActionTicketId },
+    });
   });
 
   // -------------------------------------------------------------------------

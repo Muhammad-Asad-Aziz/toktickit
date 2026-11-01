@@ -22,6 +22,7 @@ import {
 import { staffTicketsRouter } from "./routes/staffTickets.js";
 import { adminUsersRouter } from "./routes/adminUsers.js";
 import { actionsTakenRouter } from "./routes/actionsTaken.js";
+import { dashboardRoutes } from "./routes/dashboard.routes.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -146,5 +147,11 @@ app.post("/api/v1/tickets/:id/notes", requirePasswordChanged, appendInternalNote
 // ---------------------------------------------------------------------------
 app.use("/api/v1/tickets/:id/actions-taken", requirePasswordChanged, actionsTakenRouter);
 app.use("/api/tickets/:id/actions-taken", requirePasswordChanged, actionsTakenRouter);
+
+// ---------------------------------------------------------------------------
+// Role-Based Dashboards (Issue 21 - Lab 4)
+// ---------------------------------------------------------------------------
+app.use("/api/v1/dashboards", requirePasswordChanged, dashboardRoutes);
+app.use("/api/dashboards", requirePasswordChanged, dashboardRoutes);
 
 export default app;
