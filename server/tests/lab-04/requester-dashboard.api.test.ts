@@ -128,6 +128,9 @@ describe("Issue 21: Requester Dashboard API Integration Suite", () => {
       },
     });
 
+    // Clean up any existing tickets for zero.tickets@kmutt.ac.th to ensure clean zero state
+    await prisma.ticket.deleteMany({ where: { requesterId: emptyRequester.id } });
+
     const loginRes = await request(app)
       .post("/api/v1/auth/login")
       .send({ email: "zero.tickets@kmutt.ac.th", password: "Password123!" });

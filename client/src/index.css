@@ -60,6 +60,35 @@ html, body {
   box-sizing: inherit;
 }
 
+/* Accessibility Skip Link (WCAG 2.1 AA) */
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 16px;
+  background-color: var(--zen-primary-green);
+  color: #ffffff;
+  padding: 8px 16px;
+  z-index: 10000;
+  border-radius: var(--zen-border-radius);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  transition: top 0.15s ease-in-out;
+}
+.skip-link:focus {
+  top: 16px;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* High-Contrast Keyboard Focus Indicators (WCAG 2.1 AA) */
+:focus-visible {
+  outline: 2px solid var(--zen-focus-ring-color, #0B7A46) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 3px rgba(11, 122, 70, 0.20) !important;
+}
+
+
 
 /* Primary CTA Button (DR-09) */
 .btn-zen-primary {

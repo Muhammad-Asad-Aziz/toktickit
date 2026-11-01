@@ -135,6 +135,18 @@ export const ActionsTakenSection: React.FC<ActionsTakenSectionProps> = ({
     setFieldErrors({});
   };
 
+  // Keyboard accessibility: Escape key modal dismissal (WCAG 2.1 AA)
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isSubmitting) {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen, isSubmitting]);
+
   // Blur validation rule: clear field on invalid format
   const handleDateBlur = () => {
     if (formData.actionDateTime && isNaN(new Date(formData.actionDateTime).getTime())) {

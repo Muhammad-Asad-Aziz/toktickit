@@ -50,6 +50,18 @@ export default function RequesterTicketDetail({
   const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false);
   const [commentError, setCommentError] = useState<string | null>(null);
 
+  // Keyboard accessibility: Escape key modal dismissal (WCAG 2.1 AA)
+  useEffect(() => {
+    if (!showResolveModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isResolving) {
+        setShowResolveModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showResolveModal, isResolving]);
+
   const handleIndicateResolved = async () => {
     if (!ticket) return;
     setIsResolving(true);

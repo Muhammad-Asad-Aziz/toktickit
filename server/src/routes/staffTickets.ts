@@ -218,7 +218,7 @@ export async function assignTicketOwner(req: Request, res: Response) {
       newOwner = { id: targetUser.id, name: targetUser.name, email: targetUser.email };
     }
 
-    await prisma.ticket.update({
+    const updated = await prisma.ticket.update({
       where: { id: ticketId },
       data: { ownerId: newOwner ? newOwner.id : null },
     });
@@ -226,6 +226,7 @@ export async function assignTicketOwner(req: Request, res: Response) {
     return res.status(200).json({
       message: "Ownership updated successfully.",
       owner: newOwner,
+      updatedAt: updated.updatedAt,
     });
   } catch (error) {
     console.error("Failed to update ticket ownership:", error);
@@ -281,7 +282,7 @@ export async function updateTicketPriority(req: Request, res: Response) {
     }
 
     const normalizedPriority = String(itPriority).toUpperCase() as Priority;
-    await prisma.ticket.update({
+    const updated = await prisma.ticket.update({
       where: { id: ticketId },
       data: { itPriority: normalizedPriority },
     });
@@ -289,6 +290,7 @@ export async function updateTicketPriority(req: Request, res: Response) {
     return res.status(200).json({
       message: "IT Priority updated.",
       itPriority: normalizedPriority,
+      updatedAt: updated.updatedAt,
     });
   } catch (error) {
     console.error("Failed to update IT Priority:", error);

@@ -104,6 +104,7 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
   // 4. Authenticated Operational Views
   return (
     <div className="min-vh-100 d-flex flex-column" style={{ backgroundColor: "#F5F7F6" }}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <AppHeader
         activeView={
           activeView === "detail"
@@ -116,6 +117,7 @@ function AppContent({ initialView, initialTicketId = null }: AppContentProps) {
       />
 
       <main
+        id="main-content"
         className="container py-4 flex-grow-1"
         style={{ maxWidth: activeView === "create" ? 860 : 1320 }}
       >
